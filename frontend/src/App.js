@@ -7,7 +7,7 @@ import {
 import Shoes from "./pages/Shoes";
 import Add from "./pages/Add";
 import Update from "./pages/Update";
-
+import "./style.css"
 
 function App() {
   return (
@@ -17,7 +17,7 @@ function App() {
         
         <Route path ="/" element= {<Shoes/>}></Route>
         <Route path ="/add" element= {<Add/>}></Route>
-        <Route path ="/update" element= {<Update/>}></Route>
+        <Route path ="/update/:id" element= {<Update/>}></Route>
       </Routes>
       </BrowserRouter>
     </div>
