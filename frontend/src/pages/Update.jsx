@@ -1,52 +1,59 @@
 import axios from 'axios';
-import React from 'react'
-import {useState} from "react"
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Update =()=>{
+const Update = () => {
     const [shoe, setShoe] = useState({
-        prod_name:"",
-        prod_description:"",
+        prod_name: "",
+        prod_description: "",
         price: null,
-        image: "",
+        image: null, // Image will be a file
     });
-const navigate= useNavigate();
-const location= useLocation();
-const shoeId= location.pathname.split("/")[2]
 
-const handleChange=(e)=>{
-    setShoe((prev)=>({...prev, [e.target.name]: e.target.value}))
-};
-const handleClick= async e=>{
-    e.preventDefault()
-    try{
-        await axios.put(`http://localhost:8800/shoes/${shoeId}`, shoe)
-        navigate("/")
-    }catch(err){
-        console.log(err)
+    const navigate = useNavigate();
 
-    }
-}
+    const handleChange = (e) => {
+        const { name, value, files } = e.target;
 
+        if (name === "image") {
+            setShoe((prev) => ({ ...prev, [name]: files[0] })); // Handle file input
+        } else {
+            setShoe((prev) => ({ ...prev, [name]: value }));
+        }
+    };
 
+    const handleClick = async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('prod_name', shoe.prod_name);
+        formData.append('prod_description', shoe.prod_description);
+        formData.append('price', shoe.price);
+        formData.append('image', shoe.image); // Append the image file
 
+        try {
+            await axios.post("http://localhost:8800/shoes", formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data', // Important for file uploads
+                },
+            });
+            navigate("/");
+        } catch (err) {
+            console.log(err);
+        }
+    };
 
+    console.log(shoe);
 
-
-
-console.log(shoe)
-    return(
-        <div className= 'form'> 
-        <h1> Update Item</h1>
-        <input type= "text" placeholder='name' onChange={handleChange} name="prod_name"/>
-        <input type= "text" placeholder='prod_description' onChange={handleChange} name="prod_description"/>
-        <input type= "number" placeholder='price' onChange={handleChange} name="price"/>
-        <input type= "text" placeholder='image' onChange={handleChange} name="image"/>
-        
-        
-        <button onClick={handleClick}>Update</button>
+    return (
+        <div className='form'>
+            <h1>UPDATE ITEM</h1>
+            <input type="text" placeholder='name' onChange={handleChange} name="prod_name" />
+            <input type="text" placeholder='description' onChange={handleChange} name="prod_description" />
+            <input type="file" onChange={handleChange} name="image" /> {/* Change to file input */}
+            <input type="number" placeholder='price' onChange={handleChange} name="price" />
+            <button onClick={handleClick}>UPDATE</button>
         </div>
-    )
-}
+    );
+};
 
-export default Update
+export default Update;
