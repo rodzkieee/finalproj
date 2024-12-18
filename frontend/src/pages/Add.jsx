@@ -7,7 +7,7 @@ const Add = () => {
         prod_name: "",
         prod_description: "",
         price: null,
-        image: null, // Image will be a file
+        image: null,
     });
 
     const navigate = useNavigate();
@@ -16,7 +16,7 @@ const Add = () => {
         const { name, value, files } = e.target;
 
         if (name === "image") {
-            setShoe((prev) => ({ ...prev, [name]: files[0] })); // Handle file input
+            setShoe((prev) => ({ ...prev, [name]: files[0] })); 
         } else {
             setShoe((prev) => ({ ...prev, [name]: value }));
         }
@@ -28,12 +28,12 @@ const Add = () => {
         formData.append('prod_name', shoe.prod_name);
         formData.append('prod_description', shoe.prod_description);
         formData.append('price', shoe.price);
-        formData.append('image', shoe.image); // Append the image file
+        formData.append('image', shoe.image); 
 
         try {
             await axios.post("http://localhost:8800/shoes", formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data', // Important for file uploads
+                    'Content-Type': 'multipart/form-data', 
                 },
             });
             navigate("/");

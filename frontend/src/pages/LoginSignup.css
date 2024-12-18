@@ -1,3 +1,4 @@
+/* General reset */
 * {
     margin: 0;
     padding: 0;
@@ -5,71 +6,126 @@
     font-family: Arial, sans-serif;
 }
 
+/* Body styling */
 body {
-    background-color: #f8f8f8;
+    background: linear-gradient(to bottom, #f0f4f8, #d9e4ea);
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
+    margin: 0;
 }
 
+/* Container styling */
 .container {
     background-color: #ffffff;
     padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.15);
     max-width: 400px;
     width: 100%;
     text-align: center;
 }
 
+/* Logo styling */
 .logo img {
-    width: 80px;
-    margin-bottom: 1rem;
+    width: 90px;
+    margin-bottom: 1.5rem;
+    border-radius: 50%;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* Heading styling */
 h2 {
     color: #1e3932;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     font-size: 1.8rem;
+    font-weight: bold;
 }
 
-input {
+/* Input styling */
+input, select {
     width: 100%;
-    padding: 10px;
-    margin: 10px 0;
+    padding: 12px;
+    margin: 12px 0;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
+input:focus, select:focus {
+    border-color: #00704a;
+    box-shadow: 0px 0px 5px rgba(0, 112, 74, 0.4);
+    outline: none;
+}
+
+/* Button styling */
 button.btn {
     background-color: #00704a;
     color: white;
     border: none;
-    padding: 10px;
+    padding: 12px;
     width: 100%;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 1rem;
-    transition: background-color 0.3s;
+    font-weight: bold;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
 button.btn:hover {
-    background-color: #004f32;
+    background-color: #005a37;
+    transform: translateY(-2px);
 }
 
-p.switch {
-    margin-top: 1rem;
-    font-size: 0.9rem;
-    color: #333;
-}
-
-p.switch a {
+/* Link button styling */
+button.link-button {
+    background: none;
+    border: none;
     color: #00704a;
-    text-decoration: none;
+    cursor: pointer;
+    font-size: 0.9rem;
     font-weight: bold;
+    padding: 0;
+    text-decoration: underline;
+    transition: color 0.3s;
 }
 
-p.switch a:hover {
-    text-decoration: underline;
+button.link-button:hover {
+    color: #004f32;
+}
+
+/* Paragraph styling */
+p.switch {
+    margin-top: 1.5rem;
+    font-size: 0.95rem;
+    color: #444;
+}
+
+/* Dropdown styling */
+select {
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    .container {
+        padding: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    input, select {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+
+    button.btn {
+        font-size: 0.95rem;
+        padding: 10px;
+    }
 }
