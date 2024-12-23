@@ -25,7 +25,7 @@ const LandingPage = () => {
               <Link to="/">Home</Link>
             </li>
             <li>
-              <Link to="/shoes">Product</Link>
+              <Link to="/Product">Product</Link>
             </li>
             <li>
               <Link to="/LoginSignup">Login</Link>

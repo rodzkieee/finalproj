@@ -30,7 +30,7 @@ const LoginSignup = () => {
             if (response.ok) {
                 alert("Signup Successful!");
                 e.target.reset(); 
-                navigate("/"); // Redirect to home or login page
+                navigate("/LoginSignup"); // Redirect to login page after signup
             } else {
                 alert(`Signup Failed: ${data.message || "Unknown error"}`);
             }
@@ -46,7 +46,7 @@ const LoginSignup = () => {
         e.preventDefault();
         setIsSubmitting(true);
         const formData = new FormData(e.target);
-
+    
         try {
             const response = await fetch("http://localhost:8800/login", {
                 method: "POST",
@@ -55,12 +55,22 @@ const LoginSignup = () => {
                     "Content-Type": "application/json",
                 },
             });
-
+    
             const data = await response.json();
-
+    
             if (response.ok) {
                 alert("Login Successful!");
-                navigate("/"); // Redirect after login
+    
+                // Extract role from the nested user object
+                const userRole = data.user?.role?.toLowerCase();
+    
+                if (userRole === "admin") {
+                    navigate("/Shoes");
+                } else if (userRole === "customer") {
+                    navigate("/");
+                } else {
+                    alert("Unknown role. Please contact support.");
+                }
             } else {
                 alert(`Login Failed: ${data.message || "Invalid credentials"}`);
             }
@@ -71,7 +81,7 @@ const LoginSignup = () => {
             setIsSubmitting(false);
         }
     };
-
+    
     return (
         <div className="container">
             <div className="form-container">
@@ -80,6 +90,7 @@ const LoginSignup = () => {
                 </div>
                 <h2>{showLogin ? "Welcome Back" : "Create Your Account"}</h2>
 
+                {/* LOGIN FORM */}
                 {showLogin ? (
                     <form className="login-form" onSubmit={handleLogin}>
                         <input name="email" type="email" placeholder="Email" required />
@@ -99,6 +110,7 @@ const LoginSignup = () => {
                         </p>
                     </form>
                 ) : (
+                    /* SIGNUP FORM */
                     <form className="signup-form" onSubmit={handleSignup}>
                         <input name="name" type="text" placeholder="Full Name" required />
                         <input name="email" type="email" placeholder="Email" required />

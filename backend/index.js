@@ -84,28 +84,52 @@ app.put("/shoes/:id", upload.single('image'), (req, res) => {
     });
 });
 
+
+const saltRounds = 10;
+
+// Signup Route
 app.post("/signup", (req, res) => {
     const { name, email, password, address, phoneNumber, role } = req.body;
 
+    // Basic validation
     if (!name || !email || !password || !address || !phoneNumber) {
         return res.status(400).json({ message: "All fields are required." });
     }
 
-    const userRole = role === "admin" ? "user" : role; // Default to "user" if "admin" is attempted
+    // Validate email format (basic regex)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Invalid email format." });
+    }
 
-    const query = "INSERT INTO user (`name`, `email`, `password`, `address`, `phoneNumber`, `role`) VALUES (?)";
+    // Secure role assignment
+    const allowedRoles = ["Customer", "Admin"];
+    const userRole = allowedRoles.includes(role) ? role : "Customer";
 
-    const values = [name, email, password, address, phoneNumber, userRole];
+    // SQL query
+    const query = "INSERT INTO user (name, email, password, address, phoneNumber, role) VALUES (?)";
 
-    db.query(query, [values], (err, result) => {
+    // Hash password
+    bcrypt.hash(password, saltRounds, (err, hash) => {
         if (err) {
-            console.error("Database error:", err); 
-            return res.status(500).json({ message: "Database error." });
+            console.error("Hashing error:", err);
+            return res.status(500).json({ message: "Server error during password hashing." });
         }
-        return res.status(201).json({ message: "Signup successful." });
+
+        const values = [name, email, hash, address, phoneNumber, userRole];
+
+        // Execute the query
+        db.query(query, [values], (err, result) => {
+            if (err) {
+                console.error("Database error:", err);
+                return res.status(500).json({ message: "Database error during user creation." });
+            }
+            return res.status(201).json({ message: "Signup successful." });
+        });
     });
 });
 
+// Login Route
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
 
@@ -117,8 +141,8 @@ app.post("/login", (req, res) => {
 
     db.query(query, [email], (err, results) => {
         if (err) {
-            console.error("Database error:", err); 
-            return res.status(500).json({ message: "Database error." });
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Database error during login." });
         }
 
         if (results.length === 0) {
@@ -127,11 +151,22 @@ app.post("/login", (req, res) => {
 
         const user = results[0];
 
-        if (user.password === password) {
-            return res.status(200).json({ message: "Login successful.", user: { id: user.id, name: user.name, role: user.role } });
-        } else {
-            return res.status(401).json({ message: "Invalid email or password." });
-        }
+        // Compare hashed password
+        bcrypt.compare(password, user.password, (err, isMatch) => {
+            if (err) {
+                console.error("Error during password comparison:", err);
+                return res.status(500).json({ message: "Server error during password verification." });
+            }
+
+            if (!isMatch) {
+                return res.status(401).json({ message: "Invalid email or password." });
+            }
+
+            return res.status(200).json({ 
+                message: "Login successful.", 
+                user: { id: user.id, name: user.name, role: user.role } 
+            });
+        });
     });
 });
 
