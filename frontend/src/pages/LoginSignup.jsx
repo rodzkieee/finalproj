@@ -30,7 +30,7 @@ const LoginSignup = () => {
             if (response.ok) {
                 alert("Signup Successful!");
                 e.target.reset(); 
-                navigate("/LoginSignup"); // Redirect to login page after signup
+                navigate("/LoginSignup");
             } else {
                 alert(`Signup Failed: ${data.message || "Unknown error"}`);
             }
@@ -61,13 +61,14 @@ const LoginSignup = () => {
             if (response.ok) {
                 alert("Login Successful!");
     
-                // Extract role from the nested user object
-                const userRole = data.user?.role?.toLowerCase();
+                // Save user info to localStorage
+                localStorage.setItem("user", JSON.stringify(data.user)); // Assuming the user info is in `data.user`
     
-                if (userRole === "admin") {
-                    navigate("/Shoes");
-                } else if (userRole === "customer") {
-                    navigate("/");
+                // Check the role from the response data
+                if (data.user.role === "Admin") {
+                    navigate("/shoes"); // Redirect to admin page
+                } else if (data.user.role === "Customer") {
+                    navigate("/LandingPage2"); // Redirect to customer page
                 } else {
                     alert("Unknown role. Please contact support.");
                 }
@@ -82,6 +83,8 @@ const LoginSignup = () => {
         }
     };
     
+    
+    
     return (
         <div className="container">
             <div className="form-container">
@@ -90,7 +93,6 @@ const LoginSignup = () => {
                 </div>
                 <h2>{showLogin ? "Welcome Back" : "Create Your Account"}</h2>
 
-                {/* LOGIN FORM */}
                 {showLogin ? (
                     <form className="login-form" onSubmit={handleLogin}>
                         <input name="email" type="email" placeholder="Email" required />
@@ -110,20 +112,13 @@ const LoginSignup = () => {
                         </p>
                     </form>
                 ) : (
-                    /* SIGNUP FORM */
                     <form className="signup-form" onSubmit={handleSignup}>
+                        <input name="username" type="text" placeholder="Username" required />
                         <input name="name" type="text" placeholder="Full Name" required />
                         <input name="email" type="email" placeholder="Email" required />
                         <input name="password" type="password" placeholder="Password" required />
                         <input name="address" type="text" placeholder="Address" required />
                         <input name="phoneNumber" type="tel" placeholder="Phone Number" required />
-                        <select name="role" defaultValue="" required>
-                            <option value="" disabled>
-                                Select Role
-                            </option>
-                            <option value="Customer">Customer</option>
-                            <option value="Admin">Admin</option>
-                        </select>
                         <button type="submit" className="btn" disabled={isSubmitting}>
                             {isSubmitting ? "Signing up..." : "Sign Up"}
                         </button>

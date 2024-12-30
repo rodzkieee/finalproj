@@ -3,7 +3,8 @@ import mysql from "mysql";
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
-import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+
 
 const app = express();
 
@@ -85,14 +86,11 @@ app.put("/shoes/:id", upload.single('image'), (req, res) => {
 });
 
 
-const saltRounds = 10;
-
-// Signup Route
 app.post("/signup", (req, res) => {
-    const { name, email, password, address, phoneNumber, role } = req.body;
+    const { username, name, email, password, address, phoneNumber } = req.body;
 
     // Basic validation
-    if (!name || !email || !password || !address || !phoneNumber) {
+    if (!username || !name || !email || !password || !address || !phoneNumber) {
         return res.status(400).json({ message: "All fields are required." });
     }
 
@@ -102,73 +100,112 @@ app.post("/signup", (req, res) => {
         return res.status(400).json({ message: "Invalid email format." });
     }
 
-    // Secure role assignment
-    const allowedRoles = ["Customer", "Admin"];
-    const userRole = allowedRoles.includes(role) ? role : "Customer";
-
-    // SQL query
-    const query = "INSERT INTO user (name, email, password, address, phoneNumber, role) VALUES (?)";
-
-    // Hash password
-    bcrypt.hash(password, saltRounds, (err, hash) => {
+    // Check if email already exists in admin table
+    const adminQuery = "SELECT * FROM admin WHERE email = ?";
+    db.query(adminQuery, [email], (err, adminResults) => {
         if (err) {
-            console.error("Hashing error:", err);
-            return res.status(500).json({ message: "Server error during password hashing." });
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Database error during email check." });
         }
 
-        const values = [name, email, hash, address, phoneNumber, userRole];
+        if (adminResults.length > 0) {
+            return res.status(400).json({ message: "Email is already registered." });
+        }
 
-        // Execute the query
-        db.query(query, [values], (err, result) => {
+        // Check if email already exists in user table
+        const userQuery = "SELECT * FROM user WHERE email = ?";
+        db.query(userQuery, [email], (err, userResults) => {
             if (err) {
                 console.error("Database error:", err);
-                return res.status(500).json({ message: "Database error during user creation." });
+                return res.status(500).json({ message: "Database error during email check." });
             }
-            return res.status(201).json({ message: "Signup successful." });
+
+            if (userResults.length > 0) {
+                return res.status(400).json({ message: "Email is already registered." });
+            }
+
+            // Set role as "Customer" by default
+            const userRole = "Customer";
+
+            // SQL query to insert user
+            const query = "INSERT INTO user (username, name, email, password, address, phoneNumber, role) VALUES (?)";
+
+            // Hash password using SHA-256
+            const hash = crypto.createHash('sha256').update(password).digest('hex');
+
+            const values = [username, name, email, hash, address, phoneNumber, userRole];
+
+            // Execute the query
+            db.query(query, [values], (err, result) => {
+                if (err) {
+                    console.error("Database error:", err);
+                    return res.status(500).json({ message: "Database error during user creation." });
+                }
+                return res.status(201).json({ message: "Signup successful." });
+            });
         });
     });
 });
 
-// Login Route
-app.post("/login", (req, res) => {
-    const { email, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required." });
+
+app.post("/login", (req, res) => {
+    const { email, password, username } = req.body;
+
+    if (!email || !password || (req.body.role === 'user' && !username)) {
+        return res.status(400).json({ message: "Email, password are required." });
     }
 
-    const query = "SELECT * FROM user WHERE email = ?";
-
-    db.query(query, [email], (err, results) => {
+    // Query admin table first (admin only needs email)
+    const adminQuery = "SELECT * FROM admin WHERE email = ?";
+    db.query(adminQuery, [email], (err, adminResults) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).json({ message: "Database error during login." });
         }
 
-        if (results.length === 0) {
-            return res.status(401).json({ message: "Invalid email or password." });
-        }
+        if (adminResults.length > 0) {
+            const admin = adminResults[0];
 
-        const user = results[0];
-
-        // Compare hashed password
-        bcrypt.compare(password, user.password, (err, isMatch) => {
-            if (err) {
-                console.error("Error during password comparison:", err);
-                return res.status(500).json({ message: "Server error during password verification." });
-            }
-
-            if (!isMatch) {
+             // Direct password comparison for admin (no hashing)
+             if (admin.password !== password) {
                 return res.status(401).json({ message: "Invalid email or password." });
             }
 
             return res.status(200).json({ 
                 message: "Login successful.", 
-                user: { id: user.id, name: user.name, role: user.role } 
+                user: { id: admin.id, name: admin.name, role: "Admin" } 
             });
-        });
+        } else {
+            // If not an admin, query user table (user requires email and username)
+            const userQuery = "SELECT * FROM user WHERE email = ?";
+            db.query(userQuery, [email], (err, userResults) => {
+                if (err) {
+                    console.error("Database error:", err);
+                    return res.status(500).json({ message: "Database error during login." });
+                }
+
+                if (userResults.length === 0) {
+                    return res.status(401).json({ message: "Invalid email or password." });
+                }
+
+                const user = userResults[0];
+
+                // Compare hashed password for user
+                const hash = crypto.createHash('sha256').update(password).digest('hex');
+                if (user.password !== hash) {
+                    return res.status(401).json({ message: "Invalid email, username, or password." });
+                }
+
+                return res.status(200).json({ 
+                    message: "Login successful.", 
+                    user: { id: user.id, username: user.username, name: user.name, role: "Customer" } 
+                });
+            });
+        }
     });
 });
+
 
 
 app.listen(8800, () => {
