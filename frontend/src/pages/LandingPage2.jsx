@@ -21,12 +21,19 @@ const LandingPage2 = () => {
     setCircleColor(color);
   };
 
-  // Function to handle logout
-  const logout = () => {
+// Function to handle logout with confirmation
+const logout = (event) => {
+  // Prevent the default link behavior
+  event.preventDefault();
+
+  const confirmLogout = window.confirm("Are you sure you want to log out?");
+  if (confirmLogout) {
     localStorage.removeItem("user");
     setUser(null); // Reset user state
-    navigate("/LoginSignup"); // Redirect to login page after logout
-  };
+    navigate("/LandingPage2"); 
+  }
+};
+
 
   return (
     <div>
@@ -46,17 +53,17 @@ const LandingPage2 = () => {
             </li>
             <li>
               {user ? (
-                <Link to="#">Welcome, {user.username || user.name}</Link>
+                <Link to="/Profile">Welcome, {user.username || user.name}</Link>
               ) : (
                 <Link to="/LoginSignup">Login</Link>
               )}
             </li>
             <li>
-              {user ? (
-                <Link to="/" onClick={logout}>Logout</Link> // Logout option
-              ) : (
-                <Link to="/LoginSignup">Login</Link>
-              )}
+            {user ? (
+              <Link to="/" onClick={(event) => logout(event)}>Logout</Link> // Logout option
+            ) : (
+              <Link to="/LoginSignup"></Link>
+            )}
             </li>
           </ul>
         </header>

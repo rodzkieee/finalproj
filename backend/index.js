@@ -206,7 +206,99 @@ app.post("/login", (req, res) => {
     });
 });
 
+// GET USER PROFILE BY USERNAME
+app.get("/user/:username", (req, res) => {
+    const { username } = req.params;
 
+    if (!username) {
+        return res.status(400).json({ message: "Username is required." });
+    }
+
+    const q = "SELECT username, name, email, password, address, phoneNumber FROM user WHERE username = ?";
+
+    db.query(q, [username], (err, data) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Error fetching user data." });
+        }
+
+        if (data.length === 0) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        return res.json(data[0]);
+    });
+});
+
+
+// UPDATE USER PROFILE
+app.put("/user", (req, res) => {
+    const { username, name, email, password, address, phoneNumber } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: "Email is required." });
+    }
+
+    let fields = [];
+    let values = [];
+
+    if (username) {
+        fields.push("username = ?");
+        values.push(username);
+    }
+    if (name) {
+        fields.push("name = ?");
+        values.push(name);
+    }
+    if (password) {
+        const hash = crypto.createHash('sha256').update(password).digest('hex');
+        fields.push("password = ?");
+        values.push(hash);
+    }
+    if (address) {
+        fields.push("address = ?");
+        values.push(address);
+    }
+    if (phoneNumber) {
+        fields.push("phoneNumber = ?");
+        values.push(phoneNumber);
+    }
+
+    if (fields.length === 0) {
+        return res.status(400).json({ message: "No valid fields provided for update." });
+    }
+
+    const q = `UPDATE user SET ${fields.join(", ")} WHERE email = ?`;
+    values.push(email);
+
+    db.query(q, values, (err, data) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Error updating user data." });
+        }
+        return res.json({ message: "User profile updated successfully." });
+    });
+});
+
+
+// DELETE USER PROFILE
+app.delete("/user", (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: "Email is required to delete the account." });
+    }
+
+    const q = "DELETE FROM user WHERE email = ?";
+
+    db.query(q, [email], (err, data) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Error deleting user account." });
+        }
+        return res.json({ message: "User account deleted successfully." });
+    });
+});
 
 app.listen(8800, () => {
     console.log("connected to backend");

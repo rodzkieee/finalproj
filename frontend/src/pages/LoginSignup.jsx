@@ -60,7 +60,7 @@ const LoginSignup = () => {
     
             if (response.ok) {
                 alert("Login Successful!");
-    
+                
                 // Save user info to localStorage
                 localStorage.setItem("user", JSON.stringify(data.user)); // Assuming the user info is in `data.user`
     

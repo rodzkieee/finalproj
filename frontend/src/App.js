@@ -6,6 +6,7 @@ import LandingPage from "./pages/LandingPage";
 import LoginSignup from "./pages/LoginSignup";
 import LandingPage2 from "./pages/LandingPage2";
 import Product from "./pages/Product";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path ="/shoes" element= {<Shoes/>}></Route>
         <Route path ="/add" element= {<Add/>}></Route>
         <Route path ="/update/:id" element= {<Update/>}></Route>
+        <Route path ="/Profile" element= {<Profile/>}></Route>
         
       </Routes>
       </BrowserRouter>
