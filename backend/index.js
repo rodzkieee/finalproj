@@ -44,12 +44,13 @@ app.get("/shoes", (req, res) => {
 });
 
 app.post("/shoes", upload.single('image'), (req, res) => {
-    const q = "INSERT INTO shoes (`prod_name`, `prod_description`, `image`, `price`) VALUES (?)";
+    const q = "INSERT INTO shoes (`prod_name`, `prod_description`, `image`, `price`, `quantity`) VALUES (?)";
     const values = [
         req.body.prod_name,
         req.body.prod_description,
         req.file ? `/images/${req.file.filename}` : null,
-        req.body.price
+        req.body.price,
+        req.body.quantity
     ];
 
     db.query(q, [values], (err, data) => {
@@ -70,13 +71,14 @@ app.delete("/shoes/:id", (req, res) => {
 
 app.put("/shoes/:id", upload.single('image'), (req, res) => {
     const shoeId = req.params.id;
-    const q = "UPDATE shoes SET `prod_name`= ?, `prod_description`= ?, `image` = ?, `price` =? WHERE id =?";
+    const q = "UPDATE shoes SET `prod_name`= ?, `prod_description`= ?, `image` = ?, `price` =?, `quantity` =? WHERE id =?";
 
     const values = [
         req.body.prod_name,
         req.body.prod_description,
         req.file ? `/images/${req.file.filename}` : req.body.image, 
-        req.body.price
+        req.body.price,
+        req.body.quantity
     ];
 
     db.query(q, [...values, shoeId], (err, data) => {
@@ -299,6 +301,47 @@ app.delete("/user", (req, res) => {
         return res.json({ message: "User account deleted successfully." });
     });
 });
+
+// CHANGE PASSWORD
+app.post("/user/change-password", (req, res) => {
+    const { email, currentPassword, newPassword } = req.body;
+
+    if (!email || !currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Email, current password, and new password are required." });
+    }
+
+    const q = "SELECT password FROM user WHERE email = ?";
+    db.query(q, [email], (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Database error." });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        const user = results[0];
+        const currentHash = crypto.createHash('sha256').update(currentPassword).digest('hex');
+
+        if (user.password !== currentHash) {
+            return res.status(401).json({ message: "Current password is incorrect." });
+        }
+
+        const newHash = crypto.createHash('sha256').update(newPassword).digest('hex');
+        const updateQuery = "UPDATE user SET password = ? WHERE email = ?";
+        db.query(updateQuery, [newHash, email], (updateErr) => {
+            if (updateErr) {
+                console.error("Database error:", updateErr);
+                return res.status(500).json({ message: "Error updating password." });
+            }
+
+            return res.json({ message: "Password changed successfully." });
+        });
+    });
+});
+
+
 
 app.listen(8800, () => {
     console.log("connected to backend");

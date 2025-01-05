@@ -5,49 +5,73 @@
 }
 
 section{
-    position: relative;
+   position: relative;
     width: 100%;
     min-height: 100vh;
     padding: 100px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #fff;
 }
 
-header{
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 60px 100px;
+.header2 {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-}
-
-header .logo{
+    justify-content: space-between;
+    background-color: #ffffff;
+    padding: 10px 20px;
+    border-bottom: 2px solid #f1f1f1;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .logo-landing {
+    height: 80px;
     position: relative;
-    max-width: 80px;
-}
-
-header ul{
-    position: relative;
+    left: 10%;
+  }
+  
+  .toggle {
+    display: none;
+  }
+  
+  .navigation {
     display: flex;
-}
-
-header ul li{
     list-style: none;
-
-}
-
-header ul li a{
-    display: inline-block;
-    color: #333;
-    font-weight: 400;
-    margin-left: 40px;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .navigation li {
+    margin: 0 20px;
+    font-size: large;
+  }
+  
+  .navigation li a {
     text-decoration: none;
-}
+    color: #007b5e;
+    font-weight: bold;
+  }
+  
+  .navigation li a:hover {
+    color: #005f46;
+    text-decoration: underline;
+  }
+  
+  /* Welcome message styling */
+  .navigation li a.welcome {
+    font-style: italic;
+    color: #4CAF50;
+  }
+  
+  /* Logout button */
+  .navigation li a.logout {
+    color: #FF5733;
+    font-weight: bold;
+  }
+  
+  .navigation li a.logout:hover {
+    color: #C70039;
+  }
 
 .content{
     position: relative;

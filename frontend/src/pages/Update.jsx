@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import {Link, useNavigate, useParams } from "react-router-dom";
+import './Update.css';
 
 const Update = () => {
     const [shoe, setShoe] = useState({
@@ -8,6 +9,7 @@ const Update = () => {
         prod_description: "",
         price: null,
         image: null,
+        quantity: null,
     });
 
     const { id } = useParams(); // Retrieve shoe ID from URL params
@@ -23,6 +25,7 @@ const Update = () => {
                     prod_description: res.data.prod_description,
                     price: res.data.price,
                     image: res.data.image, // Keep the current image path
+                    quntity: res.data.quantity,
                 });
             } catch (err) {
                 console.log(err);
@@ -42,12 +45,18 @@ const Update = () => {
     };
 
     const handleClick = async (e) => {
+
+        // Show a confirmation dialog
+        const isConfirmed = window.confirm("Are you sure you want to update this item?");
+        if (!isConfirmed) return;
+
         e.preventDefault();
 
         const formData = new FormData();
         formData.append("prod_name", shoe.prod_name);
         formData.append("prod_description", shoe.prod_description);
         formData.append("price", shoe.price);
+        formData.append("quantity", shoe.quantity);
         if (shoe.image instanceof File) {
             formData.append("image", shoe.image); // Only append if new image is selected
         }
@@ -58,13 +67,19 @@ const Update = () => {
                     "Content-Type": "multipart/form-data",
                 },
             });
-            navigate("/");
+            navigate("/Shoes");
         } catch (err) {
             console.log(err);
         }
     };
 
     return (
+        <div>
+        <div className='header4'>
+        <h1>Admin Dashboard</h1>
+        <Link to="/Shoes" className="back-btn">Back</Link>
+        </div>
+
         <div className="form">
             <h1>Update Item</h1>
             <input
@@ -88,9 +103,17 @@ const Update = () => {
                 onChange={handleChange}
                 name="price"
             />
+             <input
+                type="number"
+                placeholder="quantity"
+                value={shoe.quantity || ""}
+                onChange={handleChange}
+                name="quantity"
+            />
             <label htmlFor="file-input">Upload a New Image (Optional):</label>
             <input type="file" onChange={handleChange} name="image" />
             <button onClick={handleClick}>Update</button>
+        </div>
         </div>
     );
 };

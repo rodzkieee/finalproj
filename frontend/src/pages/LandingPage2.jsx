@@ -30,43 +30,41 @@ const logout = (event) => {
   if (confirmLogout) {
     localStorage.removeItem("user");
     setUser(null); // Reset user state
-    navigate("/LandingPage2"); 
+    navigate("/"); 
   }
 };
 
 
   return (
     <div>
+          <div className="header2">
+              <a href="/">
+                <img src="images/logo.png" className="logo-landing" alt="Logo" />
+              </a>
+              <div className="toggle" />
+              <ul className="navigation">
+                <li>
+                  <Link to="/Product">Product</Link>
+                </li>
+                <li>
+                  {user ? (
+                    <Link to="/Profile">Welcome, {user.username || user.name}</Link>
+                  ) : (
+                    <Link to="/LoginSignup">Login</Link>
+                  )}
+                </li>
+                <li>
+                {user ? (
+                  <Link to="/" onClick={(event) => logout(event)}>Logout</Link> // Logout option
+                ) : (
+                  <Link to="/LoginSignup"></Link>
+                )}
+                </li>
+              </ul>
+            </div>
+
       <section>
         <div className="circle" style={{ background: circleColor }} />
-        <header>
-          <a href="/">
-            <img src="images/logo.png" className="logo" alt="Logo" />
-          </a>
-          <div className="toggle" />
-          <ul className="navigation">
-            <li>
-              <Link to="#">Home</Link>
-            </li>
-            <li>
-              <Link to="/Product">Product</Link>
-            </li>
-            <li>
-              {user ? (
-                <Link to="/Profile">Welcome, {user.username || user.name}</Link>
-              ) : (
-                <Link to="/LoginSignup">Login</Link>
-              )}
-            </li>
-            <li>
-            {user ? (
-              <Link to="/" onClick={(event) => logout(event)}>Logout</Link> // Logout option
-            ) : (
-              <Link to="/LoginSignup"></Link>
-            )}
-            </li>
-          </ul>
-        </header>
 
         <div className="content">
           <div className="textBox">

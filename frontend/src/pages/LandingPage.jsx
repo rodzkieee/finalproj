@@ -13,9 +13,7 @@ const LandingPage = () => {
 
   return (
     <div>
-      <section>
-        <div className="circle" style={{ background: circleColor }} />
-        <header>
+        <div className="main-header">
           <a href="/">
             <img src="images/logo.png" className="logo" alt="Logo" />
           </a>
@@ -31,7 +29,11 @@ const LandingPage = () => {
               <Link to="/LoginSignup">Login</Link>
             </li>
           </ul>
-        </header>
+        </div>
+
+      <section>
+
+        <div className="circle" style={{ background: circleColor }} />
 
         <div className="content">
           <div className="textBox">

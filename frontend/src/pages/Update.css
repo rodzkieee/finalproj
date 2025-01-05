@@ -1,0 +1,82 @@
+/* Form Container */
+.form {
+    width: 100%;
+    max-width: 400px;
+    background: #ffffff;
+    margin: 40px auto; /* Center the form within its parent container */
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .form h1 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+    text-align: center;
+  }
+  
+  /* Input Fields */
+  .form input[type="text"],
+  .form input[type="number"],
+  .form input[type="file"] {
+    width: 100%;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .form input[type="text"]:focus,
+  .form input[type="number"]:focus,
+  .form input[type="file"]:focus {
+    outline: none;
+    border-color: #007b5e;
+    box-shadow: 0 0 5px rgba(0, 123, 94, 0.5);
+  }
+  
+  /* Label */
+  .form label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+    display: block;
+  }
+  
+  /* Button */
+  .form button {
+    width: 100%;
+    padding: 10px 15px;
+    background-color: #007b5e;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .form button:hover {
+    background-color: #005f46;
+    transform: scale(1.03);
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 480px) {
+    .form {
+      padding: 15px 20px;
+    }
+  
+    .form h1 {
+      font-size: 20px;
+    }
+  
+    .form input,
+    .form button {
+      font-size: 14px;
+    }
+  }
+  

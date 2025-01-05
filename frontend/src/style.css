@@ -1,6 +1,7 @@
 .App {
     height: 100vh;
-    padding: 0px 50px;
+    box-sizing: border-box; /* Include padding in the height calculation */
+    padding: 20px 100px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -8,8 +9,9 @@
     background: linear-gradient(135deg, #1f1c2c, #928dab);
     color: #fff;
     font-family: 'Roboto', sans-serif;
-    overflow: auto;
+    overflow: hidden; /* Prevent scrolling */
 }
+
 
 .shoes {
     display: flex;
