@@ -372,97 +372,71 @@ app.get("/orders/:userId", (req, res) => {
 
 // Enhanced checkout endpoint with stock validation
 app.post("/checkout", (req, res) => {
-    const { userId, cart } = req.body;
+    const { userId, items, totalCost } = req.body;
 
-    if (!userId || !cart || cart.length === 0) {
-        return res.status(400).json({ message: "User ID and cart items are required." });
+    if (!userId || !items || items.length === 0) {
+        return res.status(400).json({ message: "User ID and items are required." });
     }
 
-    // Normalize product IDs to ensure compatibility
-    const productIds = cart.map(item => item.prodID || item.id);
-    console.log("Normalized Product IDs from frontend:", productIds);
+    console.log("Incoming checkout payload:", req.body); // Debugging
 
-    // Retrieve product prices from the database
-    const priceQuery = "SELECT id AS prodID, price FROM shoes WHERE id IN (?)";
-
-    db.query(priceQuery, [productIds], (err, products) => {
+    // Insert the order into the orders table
+    const orderQuery = "INSERT INTO orders (user_id, total_price) VALUES (?, ?)";
+    db.query(orderQuery, [userId, totalCost], (err, orderResult) => {
         if (err) {
-            console.error("Error retrieving product prices:", err);
-            return res.status(500).json({ message: "Error retrieving product prices." });
+            console.error("Error inserting order:", err);
+            return res.status(500).json({ message: "Error creating order." });
         }
 
-        if (products.length === 0) {
-            console.error("No matching products found for provided IDs:", productIds);
-            return res.status(400).json({ message: "No matching products found." });
-        }
+        const orderId = orderResult.insertId;
+        console.log("Order created successfully with Order ID:", orderId);
 
-        // Create a map of product IDs to prices
-        const priceMap = {};
-        products.forEach(product => {
-            priceMap[product.prodID] = product.price;
-        });
+        // Insert order items into the order_items table
+        const orderItemsQuery = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?";
+        const orderItems = items.map(item => [
+            orderId,
+            item.productID,
+            item.quantity,
+            item.price || 0
+        ]);
 
-        // Calculate total price
-        const totalPrice = cart.reduce((total, item) => {
-            const price = priceMap[item.prodID || item.id] || 0;
-            return total + price * item.quantity;
-        }, 0);
-
-        // Insert order into orders table
-        const orderQuery = "INSERT INTO orders (user_id, total_price) VALUES (?, ?)";
-
-        db.query(orderQuery, [userId, totalPrice], (err, orderResult) => {
+        db.query(orderItemsQuery, [orderItems], (err) => {
             if (err) {
-                console.error("Error inserting order:", err);
-                return res.status(500).json({ message: "Error creating order." });
+                console.error("Error inserting order items:", err);
+                return res.status(500).json({ message: "Error creating order items." });
             }
 
-            const orderId = orderResult.insertId;
-            console.log("Order created successfully with Order ID:", orderId);
-
-            // Insert each item into order_items table
-            const orderItemsQuery = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?";
-            const orderItems = cart.map(item => [
-                orderId,
-                item.prodID || item.id,
-                item.quantity,
-                priceMap[item.prodID || item.id] || 0
-            ]);
-
-            db.query(orderItemsQuery, [orderItems], (err) => {
-                if (err) {
-                    console.error("Error inserting order items:", err);
-                    return res.status(500).json({ message: "Error creating order items." });
-                }
-
-                // Update stock in shoes table
-                const stockUpdates = cart.map(item => {
-                    return new Promise((resolve, reject) => {
-                        const stockUpdateQuery = "UPDATE shoes SET quantity = quantity - ? WHERE id = ?";
-                        db.query(stockUpdateQuery, [item.quantity, item.prodID || item.id], (err) => {
-                            if (err) {
-                                console.error("Error updating stock for product ID", item.prodID || item.id, err);
-                                reject(new Error(`Error updating stock for product ID ${item.prodID || item.id}.`));
-                            } else {
-                                resolve();
-                            }
-                        });
-                    });
-                });
-
-                // Execute all stock updates
-                Promise.all(stockUpdates)
-                    .then(() => {
-                        console.log("Order created successfully with Order ID:", orderId);
-                        return res.status(201).json({ message: "Order created successfully." });
-                    })
-                    .catch((err) => {
-                        console.error("Error updating stock:", err);
-                        return res.status(500).json({ message: "Error updating stock." });
-                    });
-            });
+            // Respond with a success message
+            return res.status(201).json({ message: "Order created successfully." });
         });
     });
+});
+
+
+// Fetch user by userID
+app.get("/user/:userId", (req, res) => {
+    const userId = parseInt(req.params.userId); // Convert userId to an integer
+
+    if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID." });
+    }
+
+    const query = "SELECT userID, name, phoneNumber, address FROM user WHERE userID = ?";
+    db.query(query, [userId], (err, result) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Error fetching user data." });
+        }
+    
+        console.log("Query result:", result); // ✅ Add this line
+    
+        if (result.length === 0) {
+            return res.status(404).json({ message: "User not found." });
+        }
+    
+        return res.json(result[0]);
+    });
+    
 });
 
 

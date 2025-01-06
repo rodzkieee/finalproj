@@ -1,100 +1,86 @@
 /* Main container for the cart */
 .cart-container {
   padding: 2rem;
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column; /* Stack items vertically */
-  align-items: center; /* Center horizontally */
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.h11 p {
-  color: #007b5e; /* Set text color */
-  font-size: 20px; /* Set font size */
-  font-weight: bold; /* Make it bold */
-  text-align: center; /* Center the text */
-}
-
-.cart-container h1 {
+/* Header styling */
+.header3 {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 20px;
 }
 
-/* Cart items container */
-.cart-items {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.header3 h1 {
+  font-size: 28px;
+  color: #333;
 }
-
-.total {
-  text-align: center; /* Center-align text */
-  margin: 0px 0px 0px 540px; /* Center the element itself */
-  display: block; /* Ensure it takes up the full width */
-  margin-top: 10px; /* Add spacing above if needed */
-}
-
-
 
 /* Individual cart item styling */
 .cart-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
+  justify-content: space-between;
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: #fff;
   border: 1px solid #ddd;
-  border-radius: 5px;
-  justify-content: space-evenly; /* Ensures the controls and image are spaced out */
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
 }
 
 /* Product image styling */
 .cart-item img {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   object-fit: cover;
-  border-radius: 5px;
+  border-radius: 8px;
 }
 
-/* Product name styling */
+/* Product details styling */
 .cart-item h2 {
+  font-size: 18px;
+  color: #333;
   margin: 0;
-  font-size: 1.2rem;
 }
 
-/* Styling for text inside each cart item */
 .cart-item p {
-  margin: 0.5rem 0;
+  font-size: 14px;
+  color: #666;
+  margin: 5px 0;
 }
 
-/* Controls (quantity + remove) positioned side by side */
-.cart-controls {
+/* Controls for quantity adjustment */
+.cart-item-controls {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 10px;
 }
 
-/* Styling for quantity buttons */
-.cart-controls button {
-  padding: 0.3rem 0.6rem;
-  font-size: 1rem;
-  cursor: pointer;
+.cart-item-controls button {
+  padding: 5px 10px;
+  font-size: 16px;
+  color: #fff;
+  background-color: #005f46;
+  border: none;
   border-radius: 5px;
-  background-color: #f1f1f1;
-  border: 1px solid #ccc;
+  cursor: pointer;
 }
 
-.cart-controls button:disabled {
-  background-color: #e0e0e0;
+.cart-item-controls button:disabled {
+  background-color: #ccc;
   cursor: not-allowed;
 }
 
 /* Remove button styling */
 .remove-btn {
-  margin-top: 0.5rem;
-  padding: 0.3rem 0.8rem;
-  font-size: 0.9rem;
-  color: white;
-  background-color: #dc3545;
+  padding: 5px 10px;
+  font-size: 14px;
+  color: #fff;
+  background-color: #e74c3c;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -104,36 +90,77 @@
   background-color: #c82333;
 }
 
+/* Total cost styling */
+.total {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
 /* Checkout button styling */
 .checkout-btn {
-  margin-top: 1.5rem;
-  padding: 0.7rem 1.5rem;
-  font-size: 1rem;
-  color: white;
+  padding: 12px 20px;
+  font-size: 18px;
+  color: #fff;
   background-color: #28a745;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+  margin-top: 20px;
 }
 
 .checkout-btn:hover {
   background-color: #218838;
 }
 
-/* Displaying total amount on the right */
-h3 {
-  text-align: center;
-  margin-top: 1rem;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cart-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cart-item img {
+    width: 80px;
+    height: 80px;
+  }
+
+  .total {
+    text-align: center;
+  }
 }
 
-/* Styling for quantity text to align nicely */
-.cart-item-controls p {
-  margin: 0;
-  padding: 0.2rem 0.5rem;
-  background-color: #f7f7f7;
+/* Back to Products button styling */
+.back-to-products-btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 12px;
+  font-size: 16px;
+  color: #fff;
+  background-color: #007b5e;
   border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
+.back-to-products-btn:hover {
+  background-color: #005f46;
+  transform: scale(1.05);
+}
+
+/* Quantity control buttons styling */
+.cart-item-controls .quantity-btn {
+  padding: 5px 12px;
+  font-size: 18px;
+  color: #fff;
+  background-color: #007b5e;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.cart-item-controls .quantity-btn:hover {
+  background-color: #005f46;
+}
