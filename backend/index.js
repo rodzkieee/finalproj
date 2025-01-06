@@ -152,13 +152,13 @@ app.post("/signup", (req, res) => {
 
 
 app.post("/login", (req, res) => {
-    const { email, password, username } = req.body;
+    const { email, password } = req.body;
 
-    if (!email || !password || (req.body.role === 'user' && !username)) {
-        return res.status(400).json({ message: "Email, password are required." });
+    if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required." });
     }
 
-    // Query admin table first (admin only needs email)
+    // Query admin table first
     const adminQuery = "SELECT * FROM admin WHERE email = ?";
     db.query(adminQuery, [email], (err, adminResults) => {
         if (err) {
@@ -168,19 +168,22 @@ app.post("/login", (req, res) => {
 
         if (adminResults.length > 0) {
             const admin = adminResults[0];
-
-             // Direct password comparison for admin (no hashing)
-             if (admin.password !== password) {
+            if (admin.password !== password) {
                 return res.status(401).json({ message: "Invalid email or password." });
             }
 
-            return res.status(200).json({ 
-                message: "Login successful.", 
-                user: { id: admin.id, name: admin.name, role: "Admin" } 
+            return res.status(200).json({
+                message: "Login successful.",
+                user: {
+                    userID: admin.id,
+                    username: admin.username,
+                    name: admin.name,
+                    role: "Admin"
+                }
             });
         } else {
-            // If not an admin, query user table (user requires email and username)
-            const userQuery = "SELECT * FROM user WHERE email = ?";
+            // Query user table if not an admin
+            const userQuery = "SELECT userID, username, name, email, password, role FROM user WHERE email = ?";
             db.query(userQuery, [email], (err, userResults) => {
                 if (err) {
                     console.error("Database error:", err);
@@ -192,16 +195,21 @@ app.post("/login", (req, res) => {
                 }
 
                 const user = userResults[0];
-
-                // Compare hashed password for user
                 const hash = crypto.createHash('sha256').update(password).digest('hex');
                 if (user.password !== hash) {
-                    return res.status(401).json({ message: "Invalid email, username, or password." });
+                    return res.status(401).json({ message: "Invalid email or password." });
                 }
 
-                return res.status(200).json({ 
-                    message: "Login successful.", 
-                    user: { id: user.id, username: user.username, name: user.name, role: "Customer" } 
+                console.log("User found:", user);
+
+                return res.status(200).json({
+                    message: "Login successful.",
+                    user: {
+                        userID: user.userID,
+                        username: user.username,
+                        name: user.name,
+                        role: user.role
+                    }
                 });
             });
         }
@@ -337,6 +345,122 @@ app.post("/user/change-password", (req, res) => {
             }
 
             return res.json({ message: "Password changed successfully." });
+        });
+    });
+});
+
+// Endpoint to get order history for a specific user
+app.get("/orders/:userId", (req, res) => {
+    const userId = req.params.userId;
+
+    const q = `
+        SELECT o.id AS orderId, o.total_price AS totalPrice, o.created_at AS orderDate,
+               oi.product_id AS productId, oi.quantity, oi.price
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        WHERE o.user_id = ?
+        ORDER BY o.created_at DESC`;
+
+    db.query(q, [userId], (err, data) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Error fetching order history." });
+        }
+        return res.json(data);
+    });
+});
+
+// Enhanced checkout endpoint with stock validation
+app.post("/checkout", (req, res) => {
+    const { userId, cart } = req.body;
+
+    if (!userId || !cart || cart.length === 0) {
+        return res.status(400).json({ message: "User ID and cart items are required." });
+    }
+
+    // Normalize product IDs to ensure compatibility
+    const productIds = cart.map(item => item.prodID || item.id);
+    console.log("Normalized Product IDs from frontend:", productIds);
+
+    // Retrieve product prices from the database
+    const priceQuery = "SELECT id AS prodID, price FROM shoes WHERE id IN (?)";
+
+    db.query(priceQuery, [productIds], (err, products) => {
+        if (err) {
+            console.error("Error retrieving product prices:", err);
+            return res.status(500).json({ message: "Error retrieving product prices." });
+        }
+
+        if (products.length === 0) {
+            console.error("No matching products found for provided IDs:", productIds);
+            return res.status(400).json({ message: "No matching products found." });
+        }
+
+        // Create a map of product IDs to prices
+        const priceMap = {};
+        products.forEach(product => {
+            priceMap[product.prodID] = product.price;
+        });
+
+        // Calculate total price
+        const totalPrice = cart.reduce((total, item) => {
+            const price = priceMap[item.prodID || item.id] || 0;
+            return total + price * item.quantity;
+        }, 0);
+
+        // Insert order into orders table
+        const orderQuery = "INSERT INTO orders (user_id, total_price) VALUES (?, ?)";
+
+        db.query(orderQuery, [userId, totalPrice], (err, orderResult) => {
+            if (err) {
+                console.error("Error inserting order:", err);
+                return res.status(500).json({ message: "Error creating order." });
+            }
+
+            const orderId = orderResult.insertId;
+            console.log("Order created successfully with Order ID:", orderId);
+
+            // Insert each item into order_items table
+            const orderItemsQuery = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?";
+            const orderItems = cart.map(item => [
+                orderId,
+                item.prodID || item.id,
+                item.quantity,
+                priceMap[item.prodID || item.id] || 0
+            ]);
+
+            db.query(orderItemsQuery, [orderItems], (err) => {
+                if (err) {
+                    console.error("Error inserting order items:", err);
+                    return res.status(500).json({ message: "Error creating order items." });
+                }
+
+                // Update stock in shoes table
+                const stockUpdates = cart.map(item => {
+                    return new Promise((resolve, reject) => {
+                        const stockUpdateQuery = "UPDATE shoes SET quantity = quantity - ? WHERE id = ?";
+                        db.query(stockUpdateQuery, [item.quantity, item.prodID || item.id], (err) => {
+                            if (err) {
+                                console.error("Error updating stock for product ID", item.prodID || item.id, err);
+                                reject(new Error(`Error updating stock for product ID ${item.prodID || item.id}.`));
+                            } else {
+                                resolve();
+                            }
+                        });
+                    });
+                });
+
+                // Execute all stock updates
+                Promise.all(stockUpdates)
+                    .then(() => {
+                        console.log("Order created successfully with Order ID:", orderId);
+                        return res.status(201).json({ message: "Order created successfully." });
+                    })
+                    .catch((err) => {
+                        console.error("Error updating stock:", err);
+                        return res.status(500).json({ message: "Error updating stock." });
+                    });
+            });
         });
     });
 });

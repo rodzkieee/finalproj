@@ -5,9 +5,10 @@
 }
 
 section{
+    position: relative;
     width: 100%;
     min-height: 100vh;
-    padding: 100px;
+    padding: 70px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -26,6 +27,7 @@ section{
   .logo {
     height: 80px;
     position: relative;
+    padding-left: 20%;
   }
   
   .toggle {
@@ -93,6 +95,7 @@ section{
     color: #017143;
     font-size: 1.2em;
     font-weight: 900;
+    max-width: 600px;
 }
 
 .content .textBox p{

@@ -2,8 +2,9 @@ import { Link } from "react-router-dom";
 import "./LandingPage.css";
 import React, { useState } from "react";
 
+
 const LandingPage = () => {
-  const [currentImage, setCurrentImage] = useState("images/img1.png"); 
+  const [currentImage, setCurrentImage] = useState("images/wine.png"); 
   const [circleColor, setCircleColor] = useState("#017143"); 
 
   const handleImageChange = (imagePath, color) => {
@@ -15,7 +16,7 @@ const LandingPage = () => {
     <div>
         <div className="main-header">
           <a href="/">
-            <img src="images/logo.png" className="logo" alt="Logo" />
+            <img src="images/logo1.png" className="logo" alt="Logo" />
           </a>
           <div className="toggle" />
           <ul className="navigation">
@@ -38,41 +39,40 @@ const LandingPage = () => {
         <div className="content">
           <div className="textBox">
             <h2>
-              It's not just Coffee <br />
-              It's <span>Starbucks</span>
+              It's not just Wine <br />
+              It's <span>Emerald Vineyard</span>
             </h2>
             <p>
-              Lorem ipsum dolor sit amet consectetur, adipisicing elit. Libero
-              ipsum voluptate minima voluptatum distinctio ipsam totam ullam,
-              repudiandae quam quos itaque exercitationem at rerum placeat ex
-              sint eum dolore velit!
+            At Emerald Vineyard, every bottle tells a story of dedication and sustainability. 
+            Our grapes are nurtured in sun-drenched, emerald-green fields, 
+            where fertile soil and careful cultivation come together to produce wines of unparalleled depth and character.
             </p>
             <a href="/">Learn More</a>
           </div>
           <div className="imgBox">
-            <img src={currentImage} className="starbucks" alt="Starbucks" />
+            <img src={currentImage}  className="starbucks" alt="Starbucks" />
           </div>
         </div>
 
         <ul className="thumb">
           <li>
             <img
-              src="images/thumb1.png"
-              onClick={() => handleImageChange("images/img1.png", "#017143")}
+              src="images/wine.png"
+              onClick={() => handleImageChange("images/wine.png", "#017143")}
               alt="Thumb 1"
             />
           </li>
           <li>
             <img
-              src="images/thumb2.png"
-              onClick={() => handleImageChange("images/img2.png", "#eb7495")}
+              src="images/wine7.png"
+              onClick={() => handleImageChange("images/wine7.png", "#011991")}
               alt="Thumb 2"
             />
           </li>
           <li>
             <img
-              src="images/thumb3.png"
-              onClick={() => handleImageChange("images/img3.png", "#d752b1")}
+              src="images/wine3.png"
+              onClick={() => handleImageChange("images/wine3.png", "#a10000")}
               alt="Thumb 3"
             />
           </li>

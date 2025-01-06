@@ -61,12 +61,19 @@ const LoginSignup = () => {
             if (response.ok) {
                 alert("Login Successful!");
     
-                // Save user info to localStorage with role-specific key
+                // Save user info to localStorage with userID included
+                const userData = {
+                    userID: data.user.userID,
+                    username: data.user.username,
+                    name: data.user.name,
+                    role: data.user.role,
+                };
+
                 if (data.user.role === "Admin") {
-                    localStorage.setItem("admin", JSON.stringify(data.user)); // Store admin data
+                    localStorage.setItem("admin", JSON.stringify(userData));
                     navigate("/shoes"); // Redirect to admin page
                 } else if (data.user.role === "Customer") {
-                    localStorage.setItem("user", JSON.stringify(data.user)); // Store user data
+                    localStorage.setItem("user", JSON.stringify(userData));
                     navigate("/LandingPage2"); // Redirect to customer page
                 } else {
                     alert("Unknown role. Please contact support.");
@@ -82,14 +89,11 @@ const LoginSignup = () => {
         }
     };
     
-    
-    
-    
     return (
         <div className="container-login">
             <div className="form-container">
                 <div className="logo-login">
-                    <img src="images/logo.png" className="logo-login" alt="Logo" />
+                    <img src="images/logo1.png" className="logo-login" alt="Logo" />
                 </div>
                 <h2>{showLogin ? "Welcome Back" : "Create Your Account"}</h2>
 

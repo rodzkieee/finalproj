@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Product.css';
+import 'https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js';
 
 const Product = () => {
     const [shoes, setShoes] = useState([]);
@@ -81,9 +82,15 @@ const Product = () => {
     return (
         <div>
             <div className="header3">
-                <h1>Marketplace</h1>
-                <button onClick={handleGoToCart} className="cart-btn">Cart</button>
-                <Link to={user ? "/LandingPage2" : "/"} className="back-btn">Back</Link>
+            <h1>Marketplace</h1>
+            <div className="header-controls">
+                <div className="cart-wrapper" role="button" aria-label="Go to cart" onClick={handleGoToCart}>
+                <div className="cart-btn-fix">
+                    <ion-icon name="cart-outline"></ion-icon>
+                </div>
+                </div>
+                <Link to={user ? "/LandingPage2" : "/"} className="back-btn-cart">Back</Link>
+            </div>
             </div>
 
             <div className='shoes'>

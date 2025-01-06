@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './Cart.css';
 
 const Cart = () => {
-    const [cart, setCart] = useState(() => {
-        return JSON.parse(localStorage.getItem('cart')) || [];
-    });
+    const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('cart')) || []);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -17,55 +17,83 @@ const Cart = () => {
     }, [navigate]);
 
     useEffect(() => {
-        localStorage.setItem('cart', JSON.stringify(cart)); // Save cart to localStorage
+        localStorage.setItem('cart', JSON.stringify(cart));
     }, [cart]);
 
-    // Remove item from cart
     const handleRemoveFromCart = (id) => {
-        setCart((prevCart) => {
-            const updatedCart = prevCart.filter((item) => item.id !== id);
-            console.log('Item removed', updatedCart); // Log removed item
-            return updatedCart;
-        });
+        setCart(prevCart => prevCart.filter(item => item.id !== id));
     };
 
-    // Increase item quantity in cart
     const handleIncreaseQuantity = (id) => {
-        setCart((prevCart) =>
-            prevCart.map((item) =>
-                item.id === id && item.quantity < item.stock // Ensure quantity is within stock limit
+        setCart(prevCart =>
+            prevCart.map(item =>
+                item.id === id && item.quantity < item.stock
                     ? { ...item, quantity: item.quantity + 1 }
                     : item
             )
         );
     };
 
-    // Decrease item quantity in cart
     const handleDecreaseQuantity = (id) => {
-        setCart((prevCart) =>
-            prevCart.map((item) =>
-                item.id === id && item.quantity > 1 // Prevent going below quantity 1
+        setCart(prevCart =>
+            prevCart.map(item =>
+                item.id === id && item.quantity > 1
                     ? { ...item, quantity: item.quantity - 1 }
                     : item
             )
         );
     };
 
-    // Checkout handler
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
         if (cart.length === 0) {
             alert("Your cart is empty!");
             return;
         }
-        alert("Proceeding to Checkout...");
-        // Add checkout logic here
+    
+        const user = JSON.parse(localStorage.getItem('user'));
+    
+        if (!user || !user.userID) {
+            alert("Please log in to complete your order.");
+            navigate('/LoginSignup');
+            return;
+        }
+    
+        setLoading(true);
+    
+        try {
+            const payload = {
+                userId: user.userID,
+                cart: cart.map(item => ({
+                    prodID: item.id, // Changed from 'id' to 'prodID'
+                    quantity: item.quantity,
+                    price: item.price
+                }))
+            };
+    
+            console.log("Checkout Payload:", payload);
+    
+            const response = await axios.post("http://localhost:8800/checkout", payload);
+    
+            if (response.status === 201) {
+                alert("Order placed successfully!");
+                setCart([]);
+                localStorage.removeItem('cart');
+            }
+        } catch (err) {
+            console.error("Error during checkout:", err.response?.data || err.message);
+    
+            if (err.response && err.response.data && err.response.data.message) {
+                alert(`Error: ${err.response.data.message}`);
+            } else {
+                alert("An error occurred during checkout. Please try again.");
+            }
+        } finally {
+            setLoading(false);
+        }
     };
+    
 
-    // Calculate total price of cart items
     const total = cart.reduce((total, item) => total + item.price * item.quantity, 0);
-
-    // Log cart state for debugging
-    console.log('Current cart state:', cart);
 
     return (
         <div>
@@ -75,11 +103,11 @@ const Cart = () => {
             </div>
             <div className="cart-container">
                 {cart.length === 0 ? (
-                    <div className='h11'>
-                    <p>Your cart is empty!</p>
+                    <div className="empty-cart">
+                        <p>Your cart is empty!</p>
                     </div>
                 ) : (
-                    cart.map((item) => (
+                    cart.map(item => (
                         <div key={item.id} className="cart-item">
                             <img
                                 src={`http://localhost:8800${item.image}`}
@@ -91,22 +119,26 @@ const Cart = () => {
                             <p>Stock: {item.stock}</p>
                             <p>Quantity: {item.quantity}</p>
                             <div className="cart-item-controls">
-                                <div className="quantity-controls">
-                                    <button onClick={() => handleDecreaseQuantity(item.id)}>-</button>
-                                    <button onClick={() => handleIncreaseQuantity(item.id)}disabled={item.quantity >= item.stock} // Disable button if quantity >= stock
-                                            >
-                                        +
-                                    </button>
-                                </div>
+                                <button onClick={() => handleDecreaseQuantity(item.id)}>-</button>
+                                <button
+                                    onClick={() => handleIncreaseQuantity(item.id)}
+                                    disabled={item.quantity >= item.stock}
+                                >
+                                    +
+                                </button>
                             </div>
-                            <button onClick={() => handleRemoveFromCart(item.id)} className="remove-btn"> Remove </button>
+                            <button onClick={() => handleRemoveFromCart(item.id)} className="remove-btn">
+                                Remove
+                            </button>
                         </div>
                     ))
                 )}
             </div>
-            <div className='total'>
-            <h8>Total: ₱{total}</h8>
-            <button onClick={handleCheckout}>Checkout</button>
+            <div className="total">
+                <h3>Total: ₱{total.toLocaleString()}</h3>
+                <button onClick={handleCheckout} disabled={cart.length === 0 || loading}>
+                    {loading ? "Processing..." : "Checkout"}
+                </button>
             </div>
         </div>
     );
