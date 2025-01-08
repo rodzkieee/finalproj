@@ -121,38 +121,37 @@ const Cart = () => {
           </div>
         ) : (
           cart.map((item) => (
-<div key={item.product_id} className="cart-item">
-    <img
-        src={`http://localhost:8800${item.image}`}
-        alt={item.prod_name}
-        className="cart-item-image"
-    />
-    <h2>{item.prod_name}</h2>
-    <p>₱{item.price}</p>
-    <p>Stock: {item.stock}</p> {/* Display stock here */}
-    <p>Quantity: {item.quantity}</p>
-    <div className="cart-item-controls">
-        <button
-            className="quantity-btn"
-            onClick={() => handleDecreaseQuantity(item.product_id)}
-        >
-            -
-        </button>
-        <button
-            className="quantity-btn"
-            onClick={() => handleIncreaseQuantity(item.product_id)}
-        >
-            +
-        </button>
-    </div>
-    <button
-        onClick={() => handleRemoveFromCart(item.product_id)}
-        className="remove-btn"
-    >
-        Remove
-    </button>
-</div>
-
+            <div key={item.product_id} className="cart-item">
+              <img
+                src={`http://localhost:8800${item.image}`}
+                alt={item.prod_name}
+                className="cart-item-image"
+              />
+              <h2>{item.prod_name}</h2>
+              <p>₱{item.price}</p>
+              <p>Stock: {item.stock}</p>
+              <p>Quantity: {item.quantity}</p>
+              <div className="cart-item-controls">
+                <button
+                  className="quantity-btn"
+                  onClick={() => handleDecreaseQuantity(item.product_id)}
+                >
+                  -
+                </button>
+                <button
+                  className="quantity-btn"
+                  onClick={() => handleIncreaseQuantity(item.product_id)}
+                >
+                  +
+                </button>
+              </div>
+              <button
+                onClick={() => handleRemoveFromCart(item.product_id)}
+                className="remove-btn"
+              >
+                Remove
+              </button>
+            </div>
           ))
         )}
       </div>

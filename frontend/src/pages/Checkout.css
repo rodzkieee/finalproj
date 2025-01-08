@@ -1,50 +1,102 @@
 .checkout-container {
-    padding: 20px;
-  }
-  
-  .checkout-items {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .checkout-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .checkout-item img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-  }
-  
-  .checkout-summary {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .confirm-btn {
-    background-color: #4caf50;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .cancel-btn {
-    background-color: #f44336;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    cursor: pointer;
-  }
-  
-  button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-  
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header-checkout{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-bottom: 2px solid #e0e0e0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.checkout-header {
+  font-size: 28px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.checkout-items {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.checkout-item {
+  display: flex;
+  align-items: center;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.checkout-item-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.checkout-item-details {
+  margin-left: 15px;
+}
+
+.checkout-item-name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.checkout-item-price,
+.checkout-item-total {
+  font-size: 16px;
+  color: #555;
+}
+
+.checkout-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.checkout-total {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.checkout-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.confirm-btn {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.cancel-btn {
+  background-color: #f44336;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}

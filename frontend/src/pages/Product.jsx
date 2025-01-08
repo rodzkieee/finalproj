@@ -103,25 +103,34 @@ const Product = () => {
     });
   };
 
-// ✅ Updated Buy Now button functionality
-const handleBuyNow = (shoe) => {
-  if (!user) {
-    alert("Please Login First!");
-    navigate("/LoginSignup");
-    return;
-  }
-
-  const confirmation = window.confirm(`Are you sure you want to buy ${shoe.prod_name}?`);
-  if (confirmation) {
-    // Navigate to Checkout page with the selected shoe details
-    navigate("/Checkout", {
-      state: {
-        product: shoe,
-        quantity: 1, // Default quantity is 1 for Buy Now
-      },
-    });
-  }
-};
+  const handleBuyNow = (shoe) => {
+    if (!user) {
+      alert("Please Login First!");
+      navigate("/LoginSignup");
+      return;
+    }
+  
+    const confirmation = window.confirm(`Are you sure you want to buy ${shoe.prod_name}?`);
+    if (confirmation) {
+      // Navigate to Checkout page with the selected shoe details as a cart array
+      navigate("/Checkout", {
+        state: {
+          cart: [
+            {
+              product_id: shoe.id,
+              prod_name: shoe.prod_name,
+              price: shoe.price,
+              quantity: 1, // Default quantity is 1 for Buy Now
+              stock: shoe.quantity, // Pass stock information
+              image: shoe.image,
+            },
+          ],
+        },
+      });
+    }
+  };
+  
+  
 
 
   // Increase quantity functionality

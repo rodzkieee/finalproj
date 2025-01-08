@@ -450,7 +450,6 @@ app.get("/orders/:userId", (req, res) => {
     });
 });
 
-// Enhanced checkout endpoint with stock validation
 app.post("/checkout", (req, res) => {
     const { userId, items, totalCost } = req.body;
 
@@ -458,22 +457,16 @@ app.post("/checkout", (req, res) => {
         return res.status(400).json({ message: "User ID and items are required." });
     }
 
-    // Check stock availability for each product
-    const stockQuery = "SELECT id, prod_name, quantity FROM shoes WHERE id IN (?)";
-    const productIds = items.map((item) => item.product_id);
-
-    db.query(stockQuery, [productIds], (err, products) => {
+    // Check if the user exists in the user table
+    const userQuery = "SELECT * FROM user WHERE userID = ?";
+    db.query(userQuery, [userId], (err, userResult) => {
         if (err) {
             console.error("Database error:", err);
-            return res.status(500).json({ message: "Error checking stock." });
+            return res.status(500).json({ message: "Error checking user." });
         }
 
-        // Validate stock availability
-        for (const item of items) {
-            const product = products.find((p) => p.id === item.product_id);
-            if (!product || product.quantity < item.quantity) {
-                return res.status(400).json({ message: `Insufficient stock for ${product.prod_name}.` });
-            }
+        if (userResult.length === 0) {
+            return res.status(400).json({ message: "User does not exist." });
         }
 
         // Insert the order into the orders table
@@ -501,12 +494,55 @@ app.post("/checkout", (req, res) => {
                     return res.status(500).json({ message: "Error creating order items." });
                 }
 
-                // Respond with a success message
-                return res.status(201).json({ message: "Order created successfully." });
+                // Update stock in the database
+                const stockUpdates = items.map((item) => {
+                    return new Promise((resolve, reject) => {
+                        const updateStockQuery = "UPDATE shoes SET quantity = quantity - ? WHERE id = ?";
+                        db.query(updateStockQuery, [item.quantity, item.product_id], (err, result) => {
+                            if (err) {
+                                console.error("Error updating stock:", err);
+                                reject(err);
+                            } else {
+                                resolve(result);
+                            }
+                        });
+                    });
+                });
+
+                // Execute all stock updates
+                Promise.all(stockUpdates)
+                    .then(() => {
+                        return res.status(201).json({ message: "Order created successfully and stock updated." });
+                    })
+                    .catch((err) => {
+                        console.error("Error updating stocks:", err);
+                        return res.status(500).json({ message: "Error updating stocks." });
+                    });
             });
         });
     });
 });
+
+
+// Endpoint to clear purchased items from the cart
+app.post('/cart/clear', (req, res) => {
+    const { userId } = req.body;
+
+    if (!userId) {
+        return res.status(400).json({ message: 'User ID is required.' });
+    }
+
+    const query = 'DELETE FROM cart WHERE user_id = ?';
+    db.query(query, [userId], (err, result) => {
+        if (err) {
+            console.error('Error clearing cart:', err);
+            return res.status(500).json({ message: 'Error clearing cart.' });
+        }
+
+        return res.status(200).json({ message: 'Cart cleared successfully.' });
+    });
+});
+
 
 app.put("/cart/:userID/:productID", (req, res) => {
     const { userID, productID } = req.params;
