@@ -349,6 +349,86 @@ app.post("/user/change-password", (req, res) => {
     });
 });
 
+// Save Cart Endpoint
+app.post("/cart", (req, res) => {
+    const { userId, items } = req.body;
+
+    if (!userId || !items || items.length === 0) {
+        return res.status(400).json({ message: "User ID and items are required." });
+    }
+
+    const values = items.map(item => [userId, item.product_id, item.quantity]);
+
+    // Corrected SQL query to handle merging items
+    const query = `
+        INSERT INTO cart (user_id, product_id, quantity)
+        VALUES ?
+        ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
+    `;
+
+    db.query(query, [values], (err) => {
+        if (err) {
+            console.error("Error inserting cart items:", err);
+            return res.status(500).json({ message: "Error saving cart." });
+        }
+        return res.status(200).json({ message: "Cart saved successfully." });
+    });
+});
+
+app.get("/cart/:userId", (req, res) => {
+    const userId = req.params.userId;
+
+    const query = `
+        SELECT c.user_id, c.product_id, c.quantity, s.prod_name, s.price, s.image, s.quantity AS stock
+        FROM cart c
+        JOIN shoes s ON c.product_id = s.id
+        WHERE c.user_id = ?
+    `;
+
+    db.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error("Error loading cart:", err);
+            return res.status(500).json({ message: "Error loading cart." });
+        }
+
+        res.json(results);
+    });
+});
+
+app.put("/cart/:cartID", (req, res) => {
+    const cartID = req.params.cartID;
+    const { quantity } = req.body;
+
+    const query = "UPDATE cart SET quantity = ? WHERE cartID = ?";
+    db.query(query, [quantity, cartID], (err, result) => {
+        if (err) {
+            console.error("Error updating cart item:", err);
+            return res.status(500).json({ message: "Server error." });
+        }
+
+        return res.json({ message: "Cart item updated successfully." });
+    });
+});
+
+// Delete a specific item from the cart
+app.delete("/cart/:userID/:productID", (req, res) => {
+    const { userID, productID } = req.params;
+  
+    const query = "DELETE FROM cart WHERE user_id = ? AND product_id = ?";
+    db.query(query, [userID, productID], (err, result) => {
+      if (err) {
+        console.error("Error deleting item from cart:", err);
+        return res.status(500).json({ message: "Error removing item from cart." });
+      }
+  
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Item not found in cart." });
+      }
+  
+      return res.status(200).json({ message: "Item removed from cart successfully." });
+    });
+  });
+  
 // Endpoint to get order history for a specific user
 app.get("/orders/:userId", (req, res) => {
     const userId = req.params.userId;
@@ -378,68 +458,73 @@ app.post("/checkout", (req, res) => {
         return res.status(400).json({ message: "User ID and items are required." });
     }
 
-    console.log("Incoming checkout payload:", req.body); // Debugging
+    // Check stock availability for each product
+    const stockQuery = "SELECT id, prod_name, quantity FROM shoes WHERE id IN (?)";
+    const productIds = items.map((item) => item.product_id);
 
-    // Insert the order into the orders table
-    const orderQuery = "INSERT INTO orders (user_id, total_price) VALUES (?, ?)";
-    db.query(orderQuery, [userId, totalCost], (err, orderResult) => {
+    db.query(stockQuery, [productIds], (err, products) => {
         if (err) {
-            console.error("Error inserting order:", err);
-            return res.status(500).json({ message: "Error creating order." });
+            console.error("Database error:", err);
+            return res.status(500).json({ message: "Error checking stock." });
         }
 
-        const orderId = orderResult.insertId;
-        console.log("Order created successfully with Order ID:", orderId);
+        // Validate stock availability
+        for (const item of items) {
+            const product = products.find((p) => p.id === item.product_id);
+            if (!product || product.quantity < item.quantity) {
+                return res.status(400).json({ message: `Insufficient stock for ${product.prod_name}.` });
+            }
+        }
 
-        // Insert order items into the order_items table
-        const orderItemsQuery = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?";
-        const orderItems = items.map(item => [
-            orderId,
-            item.productID,
-            item.quantity,
-            item.price || 0
-        ]);
-
-        db.query(orderItemsQuery, [orderItems], (err) => {
+        // Insert the order into the orders table
+        const orderQuery = "INSERT INTO orders (user_id, total_price) VALUES (?, ?)";
+        db.query(orderQuery, [userId, totalCost], (err, orderResult) => {
             if (err) {
-                console.error("Error inserting order items:", err);
-                return res.status(500).json({ message: "Error creating order items." });
+                console.error("Error inserting order:", err);
+                return res.status(500).json({ message: "Error creating order." });
             }
 
-            // Respond with a success message
-            return res.status(201).json({ message: "Order created successfully." });
+            const orderId = orderResult.insertId;
+
+            // Insert order items into the order_items table
+            const orderItemsQuery = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?";
+            const orderItems = items.map((item) => [
+                orderId,
+                item.product_id,
+                item.quantity,
+                item.price || 0,
+            ]);
+
+            db.query(orderItemsQuery, [orderItems], (err) => {
+                if (err) {
+                    console.error("Error inserting order items:", err);
+                    return res.status(500).json({ message: "Error creating order items." });
+                }
+
+                // Respond with a success message
+                return res.status(201).json({ message: "Order created successfully." });
+            });
         });
     });
 });
 
+app.put("/cart/:userID/:productID", (req, res) => {
+    const { userID, productID } = req.params;
+    const { quantity } = req.body;
 
-// Fetch user by userID
-app.get("/user/:userId", (req, res) => {
-    const userId = parseInt(req.params.userId); // Convert userId to an integer
-
-    if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID." });
-    }
-
-    const query = "SELECT userID, name, phoneNumber, address FROM user WHERE userID = ?";
-    db.query(query, [userId], (err, result) => {
+    // Correct query to update quantity based on user_id and product_id
+    const query = "UPDATE cart SET quantity = ? WHERE user_id = ? AND product_id = ?";
+    db.query(query, [quantity, userID, productID], (err, result) => {
         if (err) {
-            console.error("Database error:", err);
-            return res.status(500).json({ message: "Error fetching user data." });
+            console.error("Error updating cart item:", err);
+            return res.status(500).json({ message: "Server error." });
         }
-    
-        console.log("Query result:", result); // ✅ Add this line
-    
-        if (result.length === 0) {
-            return res.status(404).json({ message: "User not found." });
-        }
-    
-        return res.json(result[0]);
+
+        return res.status(200).json({ message: "Cart item updated successfully." });
     });
-    
 });
 
-
+  
 
 app.listen(8800, () => {
     console.log("connected to backend");

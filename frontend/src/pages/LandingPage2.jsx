@@ -21,6 +21,7 @@ const LandingPage2 = () => {
     const confirmLogout = window.confirm("Are you sure you want to log out?");
     if (confirmLogout) {
       localStorage.removeItem("user");
+      localStorage.removeItem("cart");
       setUser(null); // Reset user state
       navigate("/");
     }

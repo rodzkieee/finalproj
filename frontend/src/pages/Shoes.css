@@ -66,23 +66,22 @@
 }
 
 .shoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    padding: 2rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 items per row */
+    gap: 20px; /* Space between items */
+    padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
-    justify-content: center;
-}
+  }
 
 .shoe {
-    background: var(--light);
-    border-radius: var(--border-radius);
-    box-shadow: 0 4px 8px var(--shadow);
-    padding: 1.5rem;
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 2px solid var(--primary);
+  background: var(--light);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 8px var(--shadow);
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 2px solid var(--primary);
 }
 
 .shoe:hover {
@@ -96,7 +95,7 @@
     object-fit: cover;
     margin-bottom: 1rem;
     transition: transform 0.3s ease;
-}
+  }
 
 .shoe h2 {
     font-size: 1.6rem;
@@ -159,18 +158,13 @@ button:hover {
 }
 
 @media (max-width: 768px) {
-    .header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .header-buttons {
-        margin-top: 1rem;
-        flex-wrap: wrap;
-    }
-
     .shoes {
-        flex-direction: column;
-        padding: 1rem;
+      grid-template-columns: repeat(2, 1fr); /* 2 items per row on small screens */
     }
-}
+  }
+  
+  @media (max-width: 480px) {
+    .shoes {
+      grid-template-columns: 1fr; /* 1 item per row on very small screens */
+    }
+  }
