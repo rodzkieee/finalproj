@@ -90,7 +90,6 @@
 }
 
 .shoe img {
-    width: 100px;
     height: auto;
     object-fit: cover;
     margin-bottom: 1rem;

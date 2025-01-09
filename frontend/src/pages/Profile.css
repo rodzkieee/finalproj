@@ -52,8 +52,9 @@ input {
 
 .buttons {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     margin-top: 20px;
+    gap: 10px;
 }
 
 .buttons button {
@@ -103,7 +104,7 @@ input {
 
 .back-btn {
     display: inline-block;
-    padding: 5px 20px;
+    padding: 10px 15px;
     color: #fff;
     background-color: #00704a;
     text-decoration: none;

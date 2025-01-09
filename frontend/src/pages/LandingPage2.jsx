@@ -52,6 +52,9 @@ const LandingPage2 = () => {
                   <li>
                     <Link to="/Profile">Profile</Link>
                   </li>
+                  <li>
+                    <Link to="/OrderSummary">My Orders</Link>
+                  </li>
                   <li onClick={handleLogout}>Logout</li>
                 </ul>
               </>

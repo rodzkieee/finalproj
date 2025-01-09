@@ -43,6 +43,22 @@ app.get("/shoes", (req, res) => {
     });
 });
 
+app.get("/shoes/:id", (req, res) => {
+    const shoeId = req.params.id;
+    const query = "SELECT * FROM shoes WHERE id = ?";
+    
+    db.query(query, [shoeId], (err, data) => {
+        if (err) {
+            return res.status(500).json({ message: "Error fetching shoe details." });
+        }
+        if (data.length === 0) {
+            return res.status(404).json({ message: "Shoe not found." });
+        }
+        res.json(data[0]);
+    });
+});
+
+
 app.post("/shoes", upload.single('image'), (req, res) => {
     const q = "INSERT INTO shoes (`prod_name`, `prod_description`, `image`, `price`, `quantity`) VALUES (?)";
     const values = [
@@ -71,21 +87,52 @@ app.delete("/shoes/:id", (req, res) => {
 
 app.put("/shoes/:id", upload.single('image'), (req, res) => {
     const shoeId = req.params.id;
-    const q = "UPDATE shoes SET `prod_name`= ?, `prod_description`= ?, `image` = ?, `price` =?, `quantity` =? WHERE id =?";
 
-    const values = [
-        req.body.prod_name,
-        req.body.prod_description,
-        req.file ? `/images/${req.file.filename}` : req.body.image, 
-        req.body.price,
-        req.body.quantity
-    ];
+    // Build the update query dynamically based on provided fields
+    let query = "UPDATE shoes SET ";
+    const fields = [];
+    const values = [];
 
-    db.query(q, [...values, shoeId], (err, data) => {
-        if (err) return res.json(err);
+    if (req.body.prod_name) {
+        fields.push("prod_name = ?");
+        values.push(req.body.prod_name);
+    }
+
+    if (req.body.prod_description) {
+        fields.push("prod_description = ?");
+        values.push(req.body.prod_description);
+    }
+
+    if (req.body.price) {
+        fields.push("price = ?");
+        values.push(req.body.price);
+    }
+
+    if (req.body.quantity) {
+        fields.push("quantity = ?");
+        values.push(req.body.quantity);
+    }
+
+    // Only update the image if a new file is uploaded
+    if (req.file) {
+        fields.push("image = ?");
+        values.push(`/images/${req.file.filename}`);
+    }
+
+    // Join the fields with commas
+    query += fields.join(", ") + " WHERE id = ?";
+    values.push(shoeId);
+
+    // Execute the query
+    db.query(query, values, (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json("Error updating shoe");
+        }
         return res.json("Successfully Updated");
     });
 });
+
 
 
 app.post("/signup", (req, res) => {
@@ -560,7 +607,46 @@ app.put("/cart/:userID/:productID", (req, res) => {
     });
 });
 
+// UPDATE USER PROFILE
+app.put("/user", (req, res) => {
+    const { email, name, address, phoneNumber } = req.body;
   
+    if (!email) {
+      return res.status(400).json({ message: "Email is required." });
+    }
+  
+    const query = "UPDATE user SET name = ?, address = ?, phoneNumber = ? WHERE email = ?";
+    db.query(query, [name, address, phoneNumber, email], (err, result) => {
+      if (err) {
+        console.error("Error updating user data:", err);
+        return res.status(500).json({ message: "Error updating user data." });
+      }
+      res.status(200).json({ message: "User profile updated successfully." });
+    });
+  });
+  
+  app.get('/order-summary/:userId', (req, res) => {
+    const userId = req.params.userId;
+
+    const query = `
+        SELECT u.name, u.address, u.phoneNumber, o.id AS order_id, o.total_price, o.created_at, 
+               s.prod_name, s.image, oi.quantity, oi.price
+        FROM orders o
+        JOIN user u ON o.user_id = u.userID
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN shoes s ON oi.product_id = s.id
+        WHERE u.userID = ?;
+    `;
+
+    db.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error('Error fetching order summary:', err);
+            return res.status(500).json({ message: 'Server error' });
+        }
+        res.json(results);
+    });
+});
+
 
 app.listen(8800, () => {
     console.log("connected to backend");

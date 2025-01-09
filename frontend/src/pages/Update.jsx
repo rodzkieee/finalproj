@@ -25,7 +25,7 @@ const Update = () => {
                     prod_description: res.data.prod_description,
                     price: res.data.price,
                     image: res.data.image, // Keep the current image path
-                    quntity: res.data.quantity,
+                    quantity: res.data.quantity,
                 });
             } catch (err) {
                 console.log(err);
@@ -45,22 +45,19 @@ const Update = () => {
     };
 
     const handleClick = async (e) => {
-
-        // Show a confirmation dialog
-        const isConfirmed = window.confirm("Are you sure you want to update this item?");
-        if (!isConfirmed) return;
-
         e.preventDefault();
-
+    
         const formData = new FormData();
         formData.append("prod_name", shoe.prod_name);
         formData.append("prod_description", shoe.prod_description);
         formData.append("price", shoe.price);
         formData.append("quantity", shoe.quantity);
+    
+        // Only append the image if a new image is selected
         if (shoe.image instanceof File) {
-            formData.append("image", shoe.image); // Only append if new image is selected
+            formData.append("image", shoe.image);
         }
-
+    
         try {
             await axios.put(`http://localhost:8800/shoes/${id}`, formData, {
                 headers: {
@@ -69,9 +66,10 @@ const Update = () => {
             });
             navigate("/Shoes");
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     };
+    
 
     return (
         <div>
