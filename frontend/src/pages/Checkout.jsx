@@ -47,52 +47,54 @@ const Checkout = () => {
     if (!isConfirmed) return;
 
     try {
-      // Get the logged-in user's ID
       const user = JSON.parse(localStorage.getItem('user'));
-      if (!user || !user.userID) {
-        alert('User not logged in!');
-        return;
+      if (!user || !user.email) {
+          alert('User not logged in!');
+          return;
       }
-
-      // Update user info in the database
+      
       await fetch('http://localhost:8800/user', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: user.email,
-          ...userInfo
-        })
-      });
-
-      // Proceed with the purchase
-      const response = await fetch('http://localhost:8800/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.userID,
-          items: cart,
-          totalCost: cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-        })
-      });
-
-      if (response.ok) {
-        // Clear cart
-        await fetch('http://localhost:8800/cart/clear', {
-          method: 'POST',
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.userID })
+          body: JSON.stringify({
+              email: user.email,
+              ...userInfo
+          })
+      });
+      
+
+        // Proceed with the purchase
+        const response = await fetch('http://localhost:8800/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: user.userID,
+                items: cart,
+                totalCost: cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+                shippingAddress: userInfo.address
+            })
         });
-        localStorage.removeItem('cart');
-        alert('Order confirmed! Thank you for your purchase.');
-        navigate('/ordersummary');
-      } else {
-        alert('Failed to confirm purchase.');
-      }
+
+        if (response.ok) {
+            // Clear cart
+            await fetch('http://localhost:8800/cart/clear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.userID })
+            });
+            localStorage.removeItem('cart');
+            alert('Order confirmed! Thank you for your purchase.');
+            navigate('/ordersummary');
+        } else {
+            alert('Failed to confirm purchase.');
+        }
     } catch (error) {
-      console.error('Error confirming purchase:', error);
-      alert('Failed to confirm purchase. Please try again.');
+        console.error('Error confirming purchase:', error);
+        alert('Failed to confirm purchase. Please try again.');
     }
-  };
+};
+
+
 
   return (
     <>
@@ -145,7 +147,7 @@ const Checkout = () => {
               <div className="checkout-item-details">
                 <h2>{item.prod_name}</h2>
                 <p>₱{item.price}</p>
-                <p>Stock: {item.stock}</p>
+                <p>Quantity: {item.quantity}</p>
               </div>
             </div>
           ))}

@@ -122,20 +122,19 @@ const Profile = () => {
         if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
             return;
         }
-
+    
         try {
-            const response = await fetch(`http://localhost:8800/user`, {
+            const response = await fetch(`http://localhost:8800/user?email=${user.email}`, {
                 method: "DELETE",
-                body: JSON.stringify({ email: user.email }),
                 headers: {
                     "Content-Type": "application/json",
                 },
             });
-
+    
             if (!response.ok) {
                 throw new Error("Failed to delete account.");
             }
-
+    
             alert("Account deleted successfully.");
             localStorage.removeItem("user");
             window.location.href = "/LoginSignup";

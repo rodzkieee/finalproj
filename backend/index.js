@@ -77,13 +77,28 @@ app.post("/shoes", upload.single('image'), (req, res) => {
 
 app.delete("/shoes/:id", (req, res) => {
     const shoeId = req.params.id;
-    const q = "DELETE FROM shoes WHERE id= ?";
 
-    db.query(q, [shoeId], (err, data) => {
-        if (err) return res.json(err);
-        return res.json("Successfully Deleted");
+    // First, delete related rows from order_items
+    const deleteOrderItems = "DELETE FROM order_items WHERE product_id = ?";
+    db.query(deleteOrderItems, [shoeId], (err) => {
+        if (err) {
+            console.error("Error deleting related order items:", err);
+            return res.status(500).json({ message: "Error deleting related order items." });
+        }
+
+        // Then, delete the product from shoes
+        const deleteShoe = "DELETE FROM shoes WHERE id = ?";
+        db.query(deleteShoe, [shoeId], (err, data) => {
+            if (err) {
+                console.error("Error deleting shoe:", err);
+                return res.status(500).json({ message: "Error deleting shoe from database." });
+            }
+            return res.status(200).json({ message: "Shoe deleted successfully." });
+        });
     });
 });
+
+
 
 app.put("/shoes/:id", upload.single('image'), (req, res) => {
     const shoeId = req.params.id;
@@ -255,6 +270,7 @@ app.post("/login", (req, res) => {
                         userID: user.userID,
                         username: user.username,
                         name: user.name,
+                        email: user.email,
                         role: user.role
                     }
                 });
@@ -339,21 +355,56 @@ app.put("/user", (req, res) => {
 
 
 // DELETE USER PROFILE
+// DELETE USER PROFILE
 app.delete("/user", (req, res) => {
-    const { email } = req.body;
+    const { email } = req.query; // Change from req.body to req.query
 
     if (!email) {
         return res.status(400).json({ message: "Email is required to delete the account." });
     }
 
-    const q = "DELETE FROM user WHERE email = ?";
-
-    db.query(q, [email], (err, data) => {
+    // Step 1: Find the user by email
+    const getUserQuery = "SELECT userID FROM user WHERE email = ?";
+    db.query(getUserQuery, [email], (err, userResult) => {
         if (err) {
             console.error("Database error:", err);
-            return res.status(500).json({ message: "Error deleting user account." });
+            return res.status(500).json({ message: "Error fetching user data." });
         }
-        return res.json({ message: "User account deleted successfully." });
+
+        if (userResult.length === 0) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        const userId = userResult[0].userID;
+
+        // Step 2: Delete related order items first
+        const deleteOrderItemsQuery = "DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders WHERE user_id = ?)";
+        db.query(deleteOrderItemsQuery, [userId], (err) => {
+            if (err) {
+                console.error("Error deleting order items:", err);
+                return res.status(500).json({ message: "Error deleting order items." });
+            }
+
+            // Step 3: Delete related orders
+            const deleteOrdersQuery = "DELETE FROM orders WHERE user_id = ?";
+            db.query(deleteOrdersQuery, [userId], (err) => {
+                if (err) {
+                    console.error("Error deleting orders:", err);
+                    return res.status(500).json({ message: "Error deleting orders." });
+                }
+
+                // Step 4: Delete the user from the user table
+                const deleteUserQuery = "DELETE FROM user WHERE email = ?";
+                db.query(deleteUserQuery, [email], (err) => {
+                    if (err) {
+                        console.error("Error deleting user:", err);
+                        return res.status(500).json({ message: "Error deleting user account." });
+                    }
+
+                    res.status(200).json({ message: "User account deleted successfully." });
+                });
+            });
+        });
     });
 });
 
@@ -498,77 +549,52 @@ app.get("/orders/:userId", (req, res) => {
 });
 
 app.post("/checkout", (req, res) => {
-    const { userId, items, totalCost } = req.body;
+    const { userId, items, totalCost, shippingAddress } = req.body;
 
-    if (!userId || !items || items.length === 0) {
-        return res.status(400).json({ message: "User ID and items are required." });
+    if (!userId || !items || items.length === 0 || !shippingAddress) {
+        return res.status(400).json({ message: "User ID, items, and shipping address are required." });
     }
 
-    // Check if the user exists in the user table
+    // Check if the user exists
     const userQuery = "SELECT * FROM user WHERE userID = ?";
     db.query(userQuery, [userId], (err, userResult) => {
-        if (err) {
-            console.error("Database error:", err);
-            return res.status(500).json({ message: "Error checking user." });
-        }
+        if (err) return res.status(500).json({ message: "Error checking user." });
 
         if (userResult.length === 0) {
             return res.status(400).json({ message: "User does not exist." });
         }
 
-        // Insert the order into the orders table
-        const orderQuery = "INSERT INTO orders (user_id, total_price) VALUES (?, ?)";
-        db.query(orderQuery, [userId, totalCost], (err, orderResult) => {
-            if (err) {
-                console.error("Error inserting order:", err);
-                return res.status(500).json({ message: "Error creating order." });
-            }
+        // Insert the order into the `orders` table
+        const orderQuery = "INSERT INTO orders (user_id, total_price, status, shipping_address) VALUES (?, ?, ?, ?)";
+        db.query(orderQuery, [userId, totalCost, 'Pending', shippingAddress], (err, orderResult) => {
+            if (err) return res.status(500).json({ message: "Error creating order." });
 
             const orderId = orderResult.insertId;
 
-            // Insert order items into the order_items table
+            // Insert order items into the `order_items` table
             const orderItemsQuery = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?";
-            const orderItems = items.map((item) => [
-                orderId,
-                item.product_id,
-                item.quantity,
-                item.price || 0,
-            ]);
+            const orderItems = items.map(item => [orderId, item.product_id, item.quantity, item.price]);
 
             db.query(orderItemsQuery, [orderItems], (err) => {
-                if (err) {
-                    console.error("Error inserting order items:", err);
-                    return res.status(500).json({ message: "Error creating order items." });
-                }
+                if (err) return res.status(500).json({ message: "Error creating order items." });
 
-                // Update stock in the database
-                const stockUpdates = items.map((item) => {
-                    return new Promise((resolve, reject) => {
-                        const updateStockQuery = "UPDATE shoes SET quantity = quantity - ? WHERE id = ?";
-                        db.query(updateStockQuery, [item.quantity, item.product_id], (err, result) => {
-                            if (err) {
-                                console.error("Error updating stock:", err);
-                                reject(err);
-                            } else {
-                                resolve(result);
-                            }
-                        });
+                // Update the stock in the `shoes` table
+                items.forEach(item => {
+                    const updateStockQuery = "UPDATE shoes SET quantity = quantity - ? WHERE id = ?";
+                    db.query(updateStockQuery, [item.quantity, item.product_id], (updateErr) => {
+                        if (updateErr) {
+                            console.error("Error updating stock:", updateErr);
+                        }
                     });
                 });
 
-                // Execute all stock updates
-                Promise.all(stockUpdates)
-                    .then(() => {
-                        return res.status(201).json({ message: "Order created successfully and stock updated." });
-                    })
-                    .catch((err) => {
-                        console.error("Error updating stocks:", err);
-                        return res.status(500).json({ message: "Error updating stocks." });
-                    });
+                res.status(201).json({ message: "Order created successfully with shipping address and status." });
             });
         });
     });
 });
+
+
 
 
 // Endpoint to clear purchased items from the cart
@@ -610,42 +636,42 @@ app.put("/cart/:userID/:productID", (req, res) => {
 // UPDATE USER PROFILE
 app.put("/user", (req, res) => {
     const { email, name, address, phoneNumber } = req.body;
-  
+
     if (!email) {
-      return res.status(400).json({ message: "Email is required." });
+        return res.status(400).json({ message: "Email is required." });
     }
-  
+
     const query = "UPDATE user SET name = ?, address = ?, phoneNumber = ? WHERE email = ?";
     db.query(query, [name, address, phoneNumber, email], (err, result) => {
-      if (err) {
-        console.error("Error updating user data:", err);
-        return res.status(500).json({ message: "Error updating user data." });
-      }
-      res.status(200).json({ message: "User profile updated successfully." });
+        if (err) {
+            console.error("Error updating user data:", err);
+            return res.status(500).json({ message: "Error updating user data." });
+        }
+        res.status(200).json({ message: "User profile updated successfully." });
     });
-  });
+});
+
   
   app.get('/order-summary/:userId', (req, res) => {
     const userId = req.params.userId;
 
     const query = `
-        SELECT u.name, u.address, u.phoneNumber, o.id AS order_id, o.total_price, o.created_at, 
-               s.prod_name, s.image, oi.quantity, oi.price
-        FROM orders o
-        JOIN user u ON o.user_id = u.userID
-        JOIN order_items oi ON o.id = oi.order_id
-        JOIN shoes s ON oi.product_id = s.id
-        WHERE u.userID = ?;
-    `;
+    SELECT u.name, u.address, u.phoneNumber, o.id AS order_id, o.total_price, o.created_at, 
+           o.status, o.shipping_address, s.prod_name, s.image, oi.quantity, oi.price
+    FROM orders o
+    JOIN user u ON o.user_id = u.userID
+    JOIN order_items oi ON o.id = oi.order_id
+    JOIN shoes s ON oi.product_id = s.id
+    WHERE u.userID = ?;
+`;
 
     db.query(query, [userId], (err, results) => {
-        if (err) {
-            console.error('Error fetching order summary:', err);
-            return res.status(500).json({ message: 'Server error' });
-        }
+        if (err) return res.status(500).json({ message: 'Server error' });
+
         res.json(results);
     });
 });
+
 
 
 app.listen(8800, () => {

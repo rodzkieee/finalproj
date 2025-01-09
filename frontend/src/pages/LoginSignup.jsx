@@ -66,6 +66,7 @@ const LoginSignup = () => {
                     userID: data.user.userID,
                     username: data.user.username,
                     name: data.user.name,
+                    email: data.user.email,
                     role: data.user.role,
                 };
 

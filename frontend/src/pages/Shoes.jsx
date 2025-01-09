@@ -22,14 +22,21 @@ const Shoes = () => {
     const handleDelete = async (id) => {
         const isConfirmed = window.confirm("Are you sure you want to delete this item?");
         if (!isConfirmed) return;
-
+    
         try {
-            await axios.delete(`http://localhost:8800/shoes/${id}`);
-            setShoes((prevShoes) => prevShoes.filter((shoe) => shoe.id !== id));
+            const res = await axios.delete(`http://localhost:8800/shoes/${id}`);
+            if (res.status === 200) {
+                alert(res.data.message);
+                setShoes((prevShoes) => prevShoes.filter((shoe) => shoe.id !== id));
+            } else {
+                alert("Failed to delete the item.");
+            }
         } catch (err) {
-            console.log(err);
+            console.error("Error deleting item:", err);
+            alert("Error deleting item.");
         }
     };
+    
 
     const handleLogout = () => {
         // Remove admin data from local storage
@@ -65,13 +72,11 @@ const Shoes = () => {
                         <p>{shoe.prod_description}</p>
                         <p>Stock: {shoe.quantity}</p>
                         <span>₱{shoe.price}</span>
-                        <button className="delete" onClick={() => handleDelete(shoe.id)}>
-                            <strong>Delete</strong>
-                        </button>
                         <button className="update">
-                            <Link to={`/update/${shoe.id}`}>
-                                <strong>Update</strong>
-                            </Link>
+                            <Link to={`/update/${shoe.id}`}>Update</Link>
+                        </button>
+                        <button className="delete" onClick={() => handleDelete(shoe.id)}>
+                            Delete
                         </button>
                     </div>
                 ))}

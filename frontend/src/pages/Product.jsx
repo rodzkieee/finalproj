@@ -42,59 +42,55 @@ const Product = () => {
       return;
     }
 
-    // Show quantity controls and initialize quantity
     setShowQuantityControls((prev) => ({ ...prev, [shoe.id]: true }));
     setSelectedQuantities((prev) => ({ ...prev, [shoe.id]: 1 }));
   };
 
+  // Confirm Add to Cart
   const handleConfirmAddToCart = async (shoe) => {
-    const confirmation = window.confirm(`Are you sure you want to add ${shoe.prod_name} to your cart?`);
+    const confirmation = window.confirm(
+      `Are you sure you want to add ${shoe.prod_name} to your cart?`
+    );
     if (confirmation) {
-        try {
-            const user = JSON.parse(localStorage.getItem("user"));
-            if (!user) {
-                alert("Please Login First!");
-                navigate("/LoginSignup");
-                return;
-            }
-
-            // Check if the item already exists in the cart
-            setCart((prevCart) => {
-                const existingItem = prevCart.find(item => item.product_id === shoe.id);
-
-                if (existingItem) {
-                    // If the item exists, update the quantity
-                    return prevCart.map(item =>
-                        item.product_id === shoe.id
-                            ? { ...item, quantity: item.quantity + selectedQuantities[shoe.id] }
-                            : item
-                    );
-                } else {
-                    // If the item doesn't exist, add it to the cart
-                    return [...prevCart, { ...shoe, quantity: selectedQuantities[shoe.id] }];
-                }
-            });
-
-            // Save the updated cart to localStorage
-            localStorage.setItem("cart", JSON.stringify(cart));
-
-            // Send the updated cart to the backend
-            const cartItem = {
-                userId: user.userID,
-                items: [{ product_id: shoe.id, quantity: selectedQuantities[shoe.id] }]
-            };
-
-            await axios.post("http://localhost:8800/cart", cartItem);
-            alert("Item added to cart!");
-        } catch (err) {
-            console.error("Error adding item to cart:", err);
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user) {
+          alert("Please Login First!");
+          navigate("/LoginSignup");
+          return;
         }
-    }
-};
 
-  // Cancel button functionality
+        setCart((prevCart) => {
+          const existingItem = prevCart.find((item) => item.product_id === shoe.id);
+
+          if (existingItem) {
+            return prevCart.map((item) =>
+              item.product_id === shoe.id
+                ? { ...item, quantity: item.quantity + selectedQuantities[shoe.id] }
+                : item
+            );
+          } else {
+            return [...prevCart, { ...shoe, quantity: selectedQuantities[shoe.id] }];
+          }
+        });
+
+        localStorage.setItem("cart", JSON.stringify(cart));
+
+        const cartItem = {
+          userId: user.userID,
+          items: [{ product_id: shoe.id, quantity: selectedQuantities[shoe.id] }],
+        };
+
+        await axios.post("http://localhost:8800/cart", cartItem);
+        alert("Item added to cart!");
+      } catch (err) {
+        console.error("Error adding item to cart:", err);
+      }
+    }
+  };
+
+  // Cancel Add to Cart
   const handleCancelAddToCart = (shoe) => {
-    // Hide quantity controls and reset selected quantity
     setShowQuantityControls((prev) => ({ ...prev, [shoe.id]: false }));
     setSelectedQuantities((prev) => {
       const updated = { ...prev };
@@ -103,16 +99,16 @@ const Product = () => {
     });
   };
 
+  // Buy Now
   const handleBuyNow = (shoe) => {
     if (!user) {
       alert("Please Login First!");
       navigate("/LoginSignup");
       return;
     }
-  
+
     const confirmation = window.confirm(`Are you sure you want to buy ${shoe.prod_name}?`);
     if (confirmation) {
-      // Navigate to Checkout page with the selected shoe details as a cart array
       navigate("/Checkout", {
         state: {
           cart: [
@@ -120,8 +116,8 @@ const Product = () => {
               product_id: shoe.id,
               prod_name: shoe.prod_name,
               price: shoe.price,
-              quantity: 1, // Default quantity is 1 for Buy Now
-              stock: shoe.quantity, // Pass stock information
+              quantity: 1,
+              stock: shoe.quantity,
               image: shoe.image,
             },
           ],
@@ -129,11 +125,8 @@ const Product = () => {
       });
     }
   };
-  
-  
 
-
-  // Increase quantity functionality
+  // Increase Quantity
   const handleIncreaseQuantity = (shoe) => {
     setSelectedQuantities((prev) => ({
       ...prev,
@@ -141,7 +134,7 @@ const Product = () => {
     }));
   };
 
-  // Decrease quantity functionality
+  // Decrease Quantity
   const handleDecreaseQuantity = (shoe) => {
     setSelectedQuantities((prev) => ({
       ...prev,
@@ -183,52 +176,66 @@ const Product = () => {
       </div>
 
       <div className="shoes">
-        {filteredShoes.map((shoe) => (
-          <div className="shoe" key={shoe.id}>
-            <div className="container-product">
-              {shoe.image && (
-                <img
-                  src={`http://localhost:8800${shoe.image}`}
-                  alt={shoe.prod_name}
-                />
-              )}
-            </div>
-            <h2>{shoe.prod_name}</h2>
-            <p>{shoe.prod_description}</p>
-            <p>Stock: {shoe.quantity}</p>
-            <span>₱{shoe.price}</span>
+      {filteredShoes.map((shoe) => (
+  <div className="shoe" key={shoe.id}>
+    <div className="container-product">
+      {shoe.image && (
+        <img
+          src={`http://localhost:8800${shoe.image}`}
+          alt={shoe.prod_name}
+        />
+      )}
+    </div>
+    <h2>{shoe.prod_name}</h2>
+    <p>{shoe.prod_description}</p>
 
-            {showQuantityControls[shoe.id] ? (
-              <>
-                <p>Quantity: {selectedQuantities[shoe.id]}</p>
-                <div className="quantity-controls">
-                  <button onClick={() => handleDecreaseQuantity(shoe)}>-</button>
-                  <button
-                    onClick={() => handleIncreaseQuantity(shoe)}
-                    disabled={selectedQuantities[shoe.id] >= shoe.quantity}
-                  >
-                    +
-                  </button>
-                </div>
-                <div className="action-buttons">
-                  <button className="ok-btn" onClick={() => handleConfirmAddToCart(shoe)}>
-                    OK
-                  </button>
-                  <button className="cancel-btn" onClick={() => handleCancelAddToCart(shoe)}>
-                    Cancel
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="action-buttons">
-                <button onClick={() => handleAddToCart(shoe)}>Add to Cart</button>
-                <button className="buy-btn" onClick={() => handleBuyNow(shoe)}>
-                  Buy Now
-                </button>
-              </div>
-            )}
+    {/* Show stock if quantity is greater than 0 */}
+    {shoe.quantity > 0 ? (
+      <p>Stock: {shoe.quantity}</p>
+    ) : (
+      <p className="out-of-stock">Out of Stock</p>
+    )}
+
+    <span>₱{shoe.price}</span>
+
+    {/* Hide action buttons if stock is zero */}
+    {shoe.quantity > 0 && (
+      <>
+        {showQuantityControls[shoe.id] ? (
+          <>
+            <p>Quantity: {selectedQuantities[shoe.id]}</p>
+            <div className="quantity-controls">
+              <button onClick={() => handleDecreaseQuantity(shoe)}>-</button>
+              <button
+                onClick={() => handleIncreaseQuantity(shoe)}
+                disabled={selectedQuantities[shoe.id] >= shoe.quantity}
+              >
+                +
+              </button>
+            </div>
+            <div className="action-buttons">
+              <button className="ok-btn" onClick={() => handleConfirmAddToCart(shoe)}>
+                OK
+              </button>
+              <button className="cancel-btn" onClick={() => handleCancelAddToCart(shoe)}>
+                Cancel
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="action-buttons">
+            <button onClick={() => handleAddToCart(shoe)}>Add to Cart</button>
+            <button className="buy-btn" onClick={() => handleBuyNow(shoe)}>
+              Buy Now
+            </button>
           </div>
-        ))}
+        )}
+      </>
+    )}
+  </div>
+))}
+
+
       </div>
     </div>
   );

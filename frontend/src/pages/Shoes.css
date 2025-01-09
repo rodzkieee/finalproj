@@ -156,6 +156,57 @@ button:hover {
     transform: translateY(-3px);
 }
 
+/* Update and Delete Buttons Styling */
+button.update, button.delete {
+    display: inline-block;
+    background-color: var(--primary);
+    color: var(--light);
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 5px;
+    box-shadow: 0 4px 6px var(--shadow);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Update Button Hover Effect */
+button.update:hover {
+    background-color: #38a169; /* Lighter green for hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Delete Button Hover Effect */
+button.delete:hover {
+    background-color: #d9534f; /* Red for delete hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Links inside buttons should inherit styles */
+button.update a, button.delete a {
+    color: var(--light);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* Button alignment in card */
+.shoe button {
+    display: inline-block;
+    width: 45%;
+    margin-top: 10px;
+}
+
+/* Responsive Styling for Buttons */
+@media (max-width: 768px) {
+    .shoe button {
+        width: 100%;
+        margin: 10px 0;
+    }
+}
+
+
 @media (max-width: 768px) {
     .shoes {
       grid-template-columns: repeat(2, 1fr); /* 2 items per row on small screens */

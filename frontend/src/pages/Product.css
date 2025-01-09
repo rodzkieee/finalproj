@@ -147,3 +147,11 @@
   border-color: #007b5e;
   box-shadow: 0 0 5px rgba(0, 123, 94, 0.5);
 }
+
+.out-of-stock {
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
+  font-size: 18px;
+}
+
