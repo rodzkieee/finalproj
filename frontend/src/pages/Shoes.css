@@ -218,7 +218,7 @@ button.update a, button.delete a {
 /* Button alignment in card */
 .shoe button {
     display: inline-block;
-    width: 45%;
+
     margin-top: 10px;
     color: var(--light);
 }
@@ -226,7 +226,7 @@ button.update a, button.delete a {
 /* New Button Container for Update and Delete Buttons */
 .update-delete-buttons {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-evenly;
     margin-top: 10px;
 }
 

@@ -5,6 +5,7 @@ import './Cart.css';
 
 const Cart = () => {
   const [cart, setCart] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
   const navigate = useNavigate();
 
   // Fetch cart items from the backend when the component mounts
@@ -32,15 +33,14 @@ const Cart = () => {
   // Update cart item quantity in the backend
   const updateCartItemQuantity = async (productId, quantity) => {
     try {
-        const user = JSON.parse(localStorage.getItem("user"));
-        await axios.put(`http://localhost:8800/cart/${user.userID}/${productId}`, {
-            quantity: quantity,
-        });
+      const user = JSON.parse(localStorage.getItem("user"));
+      await axios.put(`http://localhost:8800/cart/${user.userID}/${productId}`, {
+        quantity: quantity,
+      });
     } catch (err) {
-        console.error("Error updating cart item quantity:", err);
+      console.error("Error updating cart item quantity:", err);
     }
-};
-
+  };
 
   // Remove item from cart
   const handleRemoveFromCart = async (productId) => {
@@ -49,7 +49,8 @@ const Cart = () => {
         const user = JSON.parse(localStorage.getItem("user"));
         await axios.delete(`http://localhost:8800/cart/${user.userID}/${productId}`);
 
-        setCart(prevCart => prevCart.filter(item => item.product_id !== productId));
+        setCart((prevCart) => prevCart.filter((item) => item.product_id !== productId));
+        setSelectedItems((prevSelected) => prevSelected.filter((id) => id !== productId));
         localStorage.removeItem("cart");
         alert("Item removed from cart!");
       } catch (error) {
@@ -91,17 +92,39 @@ const Cart = () => {
     }
   };
 
-  // Checkout
-  const handleCheckout = () => {
-    if (cart.length === 0) {
-      alert("Your cart is empty!");
-      return;
-    }
-    navigate('/checkout', { state: { cart } });
+  // Handle checkbox change
+  const handleCheckboxChange = (productId) => {
+    setSelectedItems((prevSelected) => {
+      if (prevSelected.includes(productId)) {
+        return prevSelected.filter((id) => id !== productId);
+      } else {
+        return [...prevSelected, productId];
+      }
+    });
   };
 
-  // Calculate total price
-  const total = cart.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
+  // Checkout
+  const handleCheckout = () => {
+    if (selectedItems.length === 0) {
+      alert("Please select at least one item to checkout.");
+      return;
+    }
+  
+    const itemsToCheckout = cart.filter((item) => selectedItems.includes(item.product_id));
+  
+    // Navigate to the Checkout page with selected items
+    navigate("/Checkout", {
+      state: {
+        cart: itemsToCheckout,
+      },
+    });
+  };
+  
+
+  // Calculate total price of selected items
+  const total = cart
+    .filter((item) => selectedItems.includes(item.product_id))
+    .reduce((total, item) => total + item.price * item.quantity, 0);
 
   // Sync cart with localStorage whenever it changes
   useEffect(() => {
@@ -122,15 +145,27 @@ const Cart = () => {
         ) : (
           cart.map((item) => (
             <div key={item.product_id} className="cart-item">
-              <img
-                src={`http://localhost:8800${item.image}`}
-                alt={item.prod_name}
-                className="cart-item-image"
-              />
-              <h2>{item.prod_name}</h2>
-              <p>₱{item.price}</p>
-              <p>Stock: {item.stock}</p>
-              <p>Quantity: {item.quantity}</p>
+              <div className="cart-checkbox-container">
+                <input
+                  type="checkbox"
+                  checked={selectedItems.includes(item.product_id)}
+                  onChange={() => handleCheckboxChange(item.product_id)}
+                  className="cart-item-checkbox custom-cart-checkbox"
+                />
+              </div>
+              <div className="cart-item-content">
+                <img
+                  src={`http://localhost:8800${item.image}`}
+                  alt={item.prod_name}
+                  className="cart-item-image"
+                />
+                <div className="cart-item-details">
+                  <h2>{item.prod_name}</h2>
+                  <p>₱{item.price}</p>
+                  <p>Stock: {item.stock}</p>
+                  <p>Quantity: {item.quantity}</p>
+                </div>
+              </div>
               <div className="cart-item-controls">
                 <button
                   className="quantity-btn"
@@ -161,7 +196,7 @@ const Cart = () => {
         <button
           onClick={handleCheckout}
           className="checkout-btn"
-          disabled={cart.length === 0}
+          disabled={selectedItems.length === 0}
         >
           Checkout
         </button>

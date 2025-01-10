@@ -32,6 +32,13 @@
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
 }
 
+/* Checkbox container styling */
+.cart-checkbox-container {
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+}
+
 /* Product image styling */
 .cart-item img {
   height: 100px;
@@ -162,4 +169,11 @@
 
 .cart-item-controls .quantity-btn:hover {
   background-color: #005f46;
+}
+
+/* Custom checkbox styling */
+.custom-cart-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
 }

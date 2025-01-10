@@ -162,7 +162,7 @@ const Profile = () => {
 
                 <div className="form-group">
                     <label htmlFor="name">Full Name</label>
-                    <input type="text" id="name" name="name" defaultValue={user?.name || ""} required />
+                    <input type="text" id="name" name="name" defaultValue={user?.name || ""} className="profile-input" required />
                 </div>
 
                 <div className="form-group">
@@ -172,27 +172,27 @@ const Profile = () => {
 
                 <div className="form-group">
                     <label htmlFor="address">Address</label>
-                    <input type="text" id="address" name="address" defaultValue={user?.address || ""} />
+                    <input type="text" id="address" name="address" defaultValue={user?.address || ""} className="profile-input" />
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="phoneNumber">Phone Number</label>
-                    <input type="text" id="phoneNumber" name="phoneNumber" defaultValue={user?.phoneNumber || ""} />
+                    <input type="text" id="phoneNumber" name="phoneNumber" defaultValue={user?.phoneNumber || ""} className="profile-input" />
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="currentPassword">Current Password</label>
-                    <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password" />
+                    <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password" className="profile-input" />
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="newPassword">New Password</label>
-                    <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password" />
+                    <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password" className="profile-input" />
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="confirmPassword">Confirm New Password</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password" />
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password" className="profile-input" />
                 </div>
 
                 <div className="buttons">

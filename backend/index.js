@@ -555,40 +555,47 @@ app.post("/checkout", (req, res) => {
         return res.status(400).json({ message: "User ID, items, and shipping address are required." });
     }
 
-    // Check if the user exists
-    const userQuery = "SELECT * FROM user WHERE userID = ?";
-    db.query(userQuery, [userId], (err, userResult) => {
-        if (err) return res.status(500).json({ message: "Error checking user." });
-
-        if (userResult.length === 0) {
-            return res.status(400).json({ message: "User does not exist." });
+    // Insert the order into the `orders` table
+    const orderQuery = "INSERT INTO orders (user_id, total_price, status, shipping_address) VALUES (?, ?, ?, ?)";
+    db.query(orderQuery, [userId, totalCost, 'Pending', shippingAddress], (err, orderResult) => {
+        if (err) {
+            console.error("Error creating order:", err);
+            return res.status(500).json({ message: "Error creating order." });
         }
 
-        // Insert the order into the `orders` table
-        const orderQuery = "INSERT INTO orders (user_id, total_price, status, shipping_address) VALUES (?, ?, ?, ?)";
-        db.query(orderQuery, [userId, totalCost, 'Pending', shippingAddress], (err, orderResult) => {
-            if (err) return res.status(500).json({ message: "Error creating order." });
+        const orderId = orderResult.insertId;
 
-            const orderId = orderResult.insertId;
+        // Insert order items into the `order_items` table
+        const orderItemsQuery = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?";
+        const orderItems = items.map(item => [orderId, item.product_id, item.quantity, item.price]);
 
-            // Insert order items into the `order_items` table
-            const orderItemsQuery = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?";
-            const orderItems = items.map(item => [orderId, item.product_id, item.quantity, item.price]);
+        db.query(orderItemsQuery, [orderItems], (err) => {
+            if (err) {
+                console.error("Error creating order items:", err);
+                return res.status(500).json({ message: "Error creating order items." });
+            }
 
-            db.query(orderItemsQuery, [orderItems], (err) => {
-                if (err) return res.status(500).json({ message: "Error creating order items." });
-
-                // Update the stock in the `shoes` table
-                items.forEach(item => {
-                    const updateStockQuery = "UPDATE shoes SET quantity = quantity - ? WHERE id = ?";
-                    db.query(updateStockQuery, [item.quantity, item.product_id], (updateErr) => {
-                        if (updateErr) {
-                            console.error("Error updating stock:", updateErr);
-                        }
-                    });
+            // Reduce stock quantity in the `shoes` table
+            items.forEach((item) => {
+                const updateStockQuery = "UPDATE shoes SET quantity = quantity - ? WHERE id = ?";
+                db.query(updateStockQuery, [item.quantity, item.product_id], (err) => {
+                    if (err) {
+                        console.error(`Error updating stock for product ${item.product_id}:`, err);
+                    }
                 });
+            });
 
-                res.status(201).json({ message: "Order created successfully with shipping address and status." });
+            // Clear the purchased items from the cart
+            const purchasedProductIds = items.map(item => item.product_id);
+            const deleteCartItemsQuery = "DELETE FROM cart WHERE user_id = ? AND product_id IN (?)";
+
+            db.query(deleteCartItemsQuery, [userId, purchasedProductIds], (err) => {
+                if (err) {
+                    console.error("Error clearing purchased items from cart:", err);
+                    return res.status(500).json({ message: "Error clearing purchased items from cart." });
+                }
+
+                res.status(201).json({ message: "Order created successfully." });
             });
         });
     });

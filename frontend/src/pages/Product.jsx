@@ -82,6 +82,7 @@ const Product = () => {
         };
 
         await axios.post("http://localhost:8800/cart", cartItem);
+        window.location.reload();
         alert("Item added to cart!");
       } catch (err) {
         console.error("Error adding item to cart:", err);
@@ -205,8 +206,8 @@ const Product = () => {
           <>
             <p>Quantity: {selectedQuantities[shoe.id]}</p>
             <div className="quantity-controls">
-              <button onClick={() => handleDecreaseQuantity(shoe)}>-</button>
-              <button
+              <button className="quantity-controls-button" onClick={() => handleDecreaseQuantity(shoe)}>-</button>
+              <button className="quantity-controls-button"
                 onClick={() => handleIncreaseQuantity(shoe)}
                 disabled={selectedQuantities[shoe.id] >= shoe.quantity}
               >

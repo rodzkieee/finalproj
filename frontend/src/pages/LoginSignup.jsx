@@ -7,10 +7,12 @@ const LoginSignup = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
 
+    // Toggle between Login and Signup forms
     const toggleForm = () => {
         setShowLogin(!showLogin);
     };
 
+    // Handle Signup Form Submission
     const handleSignup = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -29,25 +31,24 @@ const LoginSignup = () => {
 
             if (response.ok) {
                 alert("Signup Successful!");
-                e.target.reset(); 
-                window.location.reload();
+                e.target.reset();
                 navigate("/LoginSignup");
             } else {
                 alert(`Signup Failed: ${data.message || "Unknown error"}`);
             }
         } catch (error) {
-            console.error("Error:", error);
             alert(`Signup Failed. ${error.message || "Please try again later."}`);
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    // Handle Login Form Submission
     const handleLogin = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
         const formData = new FormData(e.target);
-    
+
         try {
             const response = await fetch("http://localhost:8800/login", {
                 method: "POST",
@@ -56,13 +57,11 @@ const LoginSignup = () => {
                     "Content-Type": "application/json",
                 },
             });
-    
+
             const data = await response.json();
-    
+
             if (response.ok) {
                 alert("Login Successful!");
-    
-                // Save user info to localStorage with userID included
                 const userData = {
                     userID: data.user.userID,
                     username: data.user.username,
@@ -73,10 +72,10 @@ const LoginSignup = () => {
 
                 if (data.user.role === "Admin") {
                     localStorage.setItem("admin", JSON.stringify(userData));
-                    navigate("/shoes"); // Redirect to admin page
+                    navigate("/shoes");
                 } else if (data.user.role === "Customer") {
                     localStorage.setItem("user", JSON.stringify(userData));
-                    navigate("/LandingPage2"); // Redirect to customer page
+                    navigate("/LandingPage2");
                 } else {
                     alert("Unknown role. Please contact support.");
                 }
@@ -84,13 +83,12 @@ const LoginSignup = () => {
                 alert(`Login Failed: ${data.message || "Invalid credentials"}`);
             }
         } catch (error) {
-            console.error("Error:", error);
             alert(`Login Failed. ${error.message || "Please try again later."}`);
         } finally {
             setIsSubmitting(false);
         }
     };
-    
+
     return (
         <div className="container-login">
             <div className="form-container">
@@ -100,9 +98,10 @@ const LoginSignup = () => {
                 <h2>{showLogin ? "Welcome Back" : "Create Your Account"}</h2>
 
                 {showLogin ? (
+                    // Login Form
                     <form className="login-form" onSubmit={handleLogin}>
-                        <input name="email" type="email" placeholder="Email" required />
-                        <input name="password" type="password" placeholder="Password" required />
+                        <input name="email" type="email" placeholder="Email" className="login-input" required />
+                        <input name="password" type="password" placeholder="Password" className="login-input" required />
                         <button type="submit" className="btn" disabled={isSubmitting}>
                             {isSubmitting ? "Logging in..." : "Login"}
                         </button>
@@ -118,13 +117,14 @@ const LoginSignup = () => {
                         </p>
                     </form>
                 ) : (
+                    // Signup Form
                     <form className="signup-form" onSubmit={handleSignup}>
-                        <input name="username" type="text" placeholder="Username" required />
-                        <input name="name" type="text" placeholder="Full Name" required />
-                        <input name="email" type="email" placeholder="Email" required />
-                        <input name="password" type="password" placeholder="Password" required />
-                        <input name="address" type="text" placeholder="Address" required />
-                        <input name="phoneNumber" type="tel" placeholder="Phone Number" required />
+                        <input name="username" type="text" placeholder="Username" className="signup-input" required />
+                        <input name="name" type="text" placeholder="Full Name" className="signup-input" required />
+                        <input name="email" type="email" placeholder="Email" className="signup-input" required />
+                        <input name="password" type="password" placeholder="Password" className="signup-input" required />
+                        <input name="address" type="text" placeholder="Address" className="signup-input" required />
+                        <input name="phoneNumber" type="tel" placeholder="Phone Number" className="signup-input" required />
                         <button type="submit" className="btn" disabled={isSubmitting}>
                             {isSubmitting ? "Signing up..." : "Sign Up"}
                         </button>
