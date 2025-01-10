@@ -65,6 +65,30 @@
     background-color: var(--hover);
 }
 
+.orders {
+    background-color: var(--primary);
+    color: var(--light);
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 8px var(--shadow);
+    text-decoration: none;
+    display: inline-block;
+}
+
+.orders a {
+    color: var(--light);
+    text-decoration: none;
+}
+
+.orders:hover {
+    background-color: var(--hover);
+    transform: translateY(-3px);
+}
+
+
 .shoes {
     display: grid;
     grid-template-columns: repeat(4, 1fr); /* 4 items per row */
@@ -196,6 +220,42 @@ button.update a, button.delete a {
     display: inline-block;
     width: 45%;
     margin-top: 10px;
+    color: var(--light);
+}
+
+/* New Button Container for Update and Delete Buttons */
+.update-delete-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+/* Scoped Button Styling */
+.shoe-button {
+    background: var(--primary);
+    color: var(--light);
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1rem;
+    box-shadow: 0 4px 8px var(--shadow);
+    transition: background 0.3s ease, transform 0.3s ease;
+    text-decoration: none;
+}
+
+/* Hover Effects for Buttons */
+.shoe-button:hover {
+    background-color: var(--hover);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Styling for Button Container */
+@media (max-width: 768px) {
+    .update-delete-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
 }
 
 /* Responsive Styling for Buttons */

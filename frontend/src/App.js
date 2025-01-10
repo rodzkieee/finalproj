@@ -10,6 +10,7 @@ import Profile from "./pages/Profile";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderSummary from "./pages/OrderSummary";
+import Orders from "./pages/Orders";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path ="/Cart" element= {<Cart/>}></Route>
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/ordersummary" element={<OrderSummary />} />
+        <Route path="/orders" element={<Orders />} />
         <Route path ="/shoes" element= {<Shoes/>}></Route>
         <Route path ="/add" element= {<Add/>}></Route>
         <Route path ="/update/:id" element= {<Update/>}></Route>

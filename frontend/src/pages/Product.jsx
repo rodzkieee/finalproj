@@ -223,12 +223,16 @@ const Product = () => {
             </div>
           </>
         ) : (
-          <div className="action-buttons">
-            <button onClick={() => handleAddToCart(shoe)}>Add to Cart</button>
-            <button className="buy-btn" onClick={() => handleBuyNow(shoe)}>
-              Buy Now
-            </button>
-          </div>
+      <div className="action-buttons">
+        
+        <button className="action-btn add-to-cart" onClick={() => handleAddToCart(shoe)}>
+          Add to Cart
+        </button>
+        <button className="action-btn buy-btn" onClick={() => handleBuyNow(shoe)}>
+          Buy Now
+        </button>
+      </div>
+
         )}
       </>
     )}

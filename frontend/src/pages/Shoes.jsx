@@ -22,7 +22,7 @@ const Shoes = () => {
     const handleDelete = async (id) => {
         const isConfirmed = window.confirm("Are you sure you want to delete this item?");
         if (!isConfirmed) return;
-    
+
         try {
             const res = await axios.delete(`http://localhost:8800/shoes/${id}`);
             if (res.status === 200) {
@@ -36,13 +36,15 @@ const Shoes = () => {
             alert("Error deleting item.");
         }
     };
-    
 
     const handleLogout = () => {
-        // Remove admin data from local storage
-        localStorage.removeItem('admin'); // Adjust 'admin' to the key used for storing admin data
-        navigate('/');
+        const isConfirmed = window.confirm("Are you sure you want to log out?");
+        if (isConfirmed) {
+            localStorage.removeItem('admin');
+            navigate('/');
+        }
     };
+    
 
     return (
         <div>
@@ -51,6 +53,9 @@ const Shoes = () => {
                 <div className="header-buttons">
                     <button className="add">
                         <Link to="/Add">Add New Item</Link>
+                    </button>
+                    <button className="orders">
+                        <Link to="/Orders">View Orders</Link>
                     </button>
                     <button className="logout" onClick={handleLogout}>
                         Logout
@@ -72,12 +77,17 @@ const Shoes = () => {
                         <p>{shoe.prod_description}</p>
                         <p>Stock: {shoe.quantity}</p>
                         <span>₱{shoe.price}</span>
-                        <button className="update">
-                            <Link to={`/update/${shoe.id}`}>Update</Link>
-                        </button>
-                        <button className="delete" onClick={() => handleDelete(shoe.id)}>
-                            Delete
-                        </button>
+                        <div className="update-delete-buttons">
+                        <button
+                            className="shoe-button"
+                            onClick={() => navigate(`/update/${shoe.id}`)}
+                            >
+                            Update
+                            </button>
+                            <button className="shoe-button" onClick={() => handleDelete(shoe.id)}>
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 ))}
             </div>

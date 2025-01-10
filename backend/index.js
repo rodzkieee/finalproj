@@ -672,6 +672,35 @@ app.put("/user", (req, res) => {
     });
 });
 
+app.get('/orders', (req, res) => {
+    const query = `
+        SELECT o.id, o.total_price, o.status, o.created_at, u.name, u.address, u.phoneNumber
+        FROM orders o
+        JOIN user u ON o.user_id = u.userID
+        ORDER BY o.created_at DESC;
+    `;
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching orders:', err);
+            return res.status(500).json({ message: 'Error fetching orders.' });
+        }
+        res.json(results);
+    });
+});
+
+app.put('/orders/:id', (req, res) => {
+    const orderId = req.params.id;
+    const { status } = req.body;
+
+    const query = 'UPDATE orders SET status = ? WHERE id = ?';
+    db.query(query, [status, orderId], (err, result) => {
+        if (err) {
+            console.error('Error updating order status:', err);
+            return res.status(500).json({ message: 'Error updating order status.' });
+        }
+        res.status(200).json({ message: 'Order status updated successfully.' });
+    });
+});
 
 
 app.listen(8800, () => {

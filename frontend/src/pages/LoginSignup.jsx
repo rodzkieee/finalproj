@@ -30,6 +30,7 @@ const LoginSignup = () => {
             if (response.ok) {
                 alert("Signup Successful!");
                 e.target.reset(); 
+                window.location.reload();
                 navigate("/LoginSignup");
             } else {
                 alert(`Signup Failed: ${data.message || "Unknown error"}`);
