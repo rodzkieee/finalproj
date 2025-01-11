@@ -42,6 +42,7 @@ const OrderSummary = () => {
                             <p><strong>Total Price:</strong> ₱{order.total_price}</p>
                             <p><strong>Date:</strong> {new Date(order.created_at).toLocaleDateString()}</p>
                             <p><strong>Status:</strong> {order.status}</p>
+                            <p><strong>Payment Method:</strong> {order.payment_method}</p>
 
                             <div className="order-products">
                                 <h4>Products:</h4>

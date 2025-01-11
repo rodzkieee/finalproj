@@ -12,7 +12,8 @@ const Checkout = () => {
   const [userInfo, setUserInfo] = useState({
     name: '',
     address: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    paymentMethod: 'COD' // Default payment method
   });
 
   // Fetch user information on component mount
@@ -22,11 +23,12 @@ const Checkout = () => {
       fetch(`http://localhost:8800/user/${user.username}`)
         .then((res) => res.json())
         .then((data) => {
-          setUserInfo({
+          setUserInfo((prev) => ({
+            ...prev,
             name: data.name,
             address: data.address,
             phoneNumber: data.phoneNumber
-          });
+          }));
         })
         .catch((err) => console.error('Error fetching user data:', err));
     }
@@ -43,58 +45,47 @@ const Checkout = () => {
 
   // Handle purchase confirmation
   const handleConfirmPurchase = async () => {
-    const isConfirmed = window.confirm('Are you sure you want to confirm the purchase?');
+    const isConfirmed = window.confirm("Are you sure you want to confirm the purchase?");
     if (!isConfirmed) return;
-
+  
     try {
-      const user = JSON.parse(localStorage.getItem('user'));
+      const user = JSON.parse(localStorage.getItem("user"));
       if (!user || !user.email) {
-          alert('User not logged in!');
-          return;
+        alert("User not logged in!");
+        return;
       }
-      
-      await fetch('http://localhost:8800/user', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-              email: user.email,
-              ...userInfo
-          })
+  
+      // Send the order to the backend
+      const response = await fetch("http://localhost:8800/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.userID,
+          items: cart,
+          totalCost: cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+          shippingAddress: userInfo.address,
+          paymentMethod: userInfo.paymentMethod,
+        }),
       });
-      
-
-        // Proceed with the purchase
-        const response = await fetch('http://localhost:8800/checkout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: user.userID,
-                items: cart,
-                totalCost: cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
-                shippingAddress: userInfo.address
-            })
-        });
-
-        if (response.ok) {
-            // Clear cart
-            await fetch('http://localhost:8800/cart/clear', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.userID })
-            });
-            localStorage.removeItem('cart');
-            alert('Order confirmed! Thank you for your purchase.');
-            navigate('/ordersummary');
-        } else {
-            alert('Failed to confirm purchase.');
-        }
+  
+      if (response.ok) {
+        alert("Order confirmed! Thank you for your purchase.");
+  
+        // Update the remaining cart in localStorage
+        const remainingCart = location.state?.remainingCart || [];
+        localStorage.setItem("cart", JSON.stringify(remainingCart));
+  
+        // Redirect to the order summary page
+        navigate("/ordersummary");
+      } else {
+        alert("Failed to confirm purchase.");
+      }
     } catch (error) {
-        console.error('Error confirming purchase:', error);
-        alert('Failed to confirm purchase. Please try again.');
+      console.error("Error confirming purchase:", error);
+      alert("Failed to confirm purchase. Please try again.");
     }
-};
-
-
+  };
+  
 
   return (
     <>
@@ -131,6 +122,18 @@ const Checkout = () => {
               value={userInfo.phoneNumber}
               onChange={handleInputChange}
             />
+          </div>
+          <div className="form-group">
+            <p>Payment Method:</p>
+            <select
+              name="paymentMethod"
+              value={userInfo.paymentMethod}
+              onChange={handleInputChange}
+            >
+              <option value="COD">COD (Cash on Delivery)</option>
+              <option value="Gcash">Gcash</option>
+              <option value="Maya">Maya</option>
+            </select>
           </div>
         </div>
 

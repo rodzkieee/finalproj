@@ -241,3 +241,25 @@
   font-size: 14px;
 }
 
+/* Payment Method Dropdown Styling */
+.user-info select {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
+  appearance: none; /* Hide default dropdown arrow for custom styling */
+}
+
+.user-info select:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.2);
+}
+
+.user-info select option {
+  padding: 10px;
+  font-size: 16px;
+}

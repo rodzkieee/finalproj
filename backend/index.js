@@ -549,15 +549,15 @@ app.get("/orders/:userId", (req, res) => {
 });
 
 app.post("/checkout", (req, res) => {
-    const { userId, items, totalCost, shippingAddress } = req.body;
+    const { userId, items, totalCost, shippingAddress, paymentMethod } = req.body;
 
-    if (!userId || !items || items.length === 0 || !shippingAddress) {
-        return res.status(400).json({ message: "User ID, items, and shipping address are required." });
+    if (!userId || !items || items.length === 0 || !shippingAddress || !paymentMethod) {
+        return res.status(400).json({ message: "All fields (User ID, items, shipping address, and payment method) are required." });
     }
 
     // Insert the order into the `orders` table
-    const orderQuery = "INSERT INTO orders (user_id, total_price, status, shipping_address) VALUES (?, ?, ?, ?)";
-    db.query(orderQuery, [userId, totalCost, 'Pending', shippingAddress], (err, orderResult) => {
+    const orderQuery = "INSERT INTO orders (user_id, total_price, status, shipping_address, payment_method) VALUES (?, ?, ?, ?, ?)";
+    db.query(orderQuery, [userId, totalCost, 'Pending', shippingAddress, paymentMethod], (err, orderResult) => {
         if (err) {
             console.error("Error creating order:", err);
             return res.status(500).json({ message: "Error creating order." });
@@ -596,6 +596,60 @@ app.post("/checkout", (req, res) => {
                 }
 
                 res.status(201).json({ message: "Order created successfully." });
+            });
+        });
+    });
+});
+
+// ✅ New /partial-checkout endpoint to handle partial item checkout
+app.post("/partial-checkout", (req, res) => {
+    const { userId, items, totalCost, shippingAddress, paymentMethod } = req.body;
+
+    if (!userId || !items || items.length === 0 || !shippingAddress || !paymentMethod) {
+        return res.status(400).json({ message: "All fields (User ID, items, shipping address, and payment method) are required." });
+    }
+
+    // Insert the order into the `orders` table
+    const orderQuery = "INSERT INTO orders (user_id, total_price, status, shipping_address, payment_method) VALUES (?, ?, ?, ?, ?)";
+    db.query(orderQuery, [userId, totalCost, 'Pending', shippingAddress, paymentMethod], (err, orderResult) => {
+        if (err) {
+            console.error("Error creating order:", err);
+            return res.status(500).json({ message: "Error creating order." });
+        }
+
+        const orderId = orderResult.insertId;
+
+        // Insert order items into the `order_items` table
+        const orderItemsQuery = "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ?";
+        const orderItems = items.map(item => [orderId, item.product_id, item.quantity, item.price]);
+
+        db.query(orderItemsQuery, [orderItems], (err) => {
+            if (err) {
+                console.error("Error creating order items:", err);
+                return res.status(500).json({ message: "Error creating order items." });
+            }
+
+            // Reduce stock quantity in the `shoes` table
+            items.forEach((item) => {
+                const updateStockQuery = "UPDATE shoes SET quantity = quantity - ? WHERE id = ?";
+                db.query(updateStockQuery, [item.quantity, item.product_id], (err) => {
+                    if (err) {
+                        console.error(`Error updating stock for product ${item.product_id}:`, err);
+                    }
+                });
+            });
+
+            // ✅ Clear only the purchased items from the cart
+            const purchasedProductIds = items.map(item => item.product_id);
+            const deleteCartItemsQuery = "DELETE FROM cart WHERE user_id = ? AND product_id IN (?)";
+
+            db.query(deleteCartItemsQuery, [userId, [purchasedProductIds]], (err) => {
+                if (err) {
+                    console.error("Error clearing purchased items from cart:", err);
+                    return res.status(500).json({ message: "Error clearing purchased items from cart." });
+                }
+
+                res.status(201).json({ message: "Partial order created successfully." });
             });
         });
     });
@@ -659,18 +713,18 @@ app.put("/user", (req, res) => {
 });
 
   
-  app.get('/order-summary/:userId', (req, res) => {
+app.get('/order-summary/:userId', (req, res) => {
     const userId = req.params.userId;
 
     const query = `
     SELECT u.name, u.address, u.phoneNumber, o.id AS order_id, o.total_price, o.created_at, 
-           o.status, o.shipping_address, s.prod_name, s.image, oi.quantity, oi.price
+           o.status, o.shipping_address, o.payment_method, s.prod_name, s.image, oi.quantity, oi.price
     FROM orders o
     JOIN user u ON o.user_id = u.userID
     JOIN order_items oi ON o.id = oi.order_id
     JOIN shoes s ON oi.product_id = s.id
     WHERE u.userID = ?;
-`;
+    `;
 
     db.query(query, [userId], (err, results) => {
         if (err) return res.status(500).json({ message: 'Server error' });
@@ -678,6 +732,7 @@ app.put("/user", (req, res) => {
         res.json(results);
     });
 });
+
 
 app.get('/orders', (req, res) => {
     const query = `

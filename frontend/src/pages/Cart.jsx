@@ -29,6 +29,11 @@ const Cart = () => {
     fetchCartItems();
 }, [navigate]);
 
+  // Sync cart with localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
+
 
   // Update cart item quantity in the backend
   const updateCartItemQuantity = async (productId, quantity) => {
@@ -104,32 +109,31 @@ const Cart = () => {
   };
 
   // Checkout
-  const handleCheckout = () => {
-    if (selectedItems.length === 0) {
-      alert("Please select at least one item to checkout.");
-      return;
-    }
-  
-    const itemsToCheckout = cart.filter((item) => selectedItems.includes(item.product_id));
-  
-    // Navigate to the Checkout page with selected items
-    navigate("/Checkout", {
-      state: {
-        cart: itemsToCheckout,
-      },
-    });
-  };
+// Navigate to Checkout without immediately clearing the cart
+const handlePartialCheckout = () => {
+  if (selectedItems.length === 0) {
+    alert("Please select at least one item to checkout.");
+    return;
+  }
+
+  const itemsToCheckout = cart.filter((item) =>
+    selectedItems.includes(item.product_id)
+  );
+
+  navigate("/Checkout", {
+    state: {
+      cart: itemsToCheckout,
+      remainingCart: cart.filter((item) => !selectedItems.includes(item.product_id)),
+    },
+  });
+};
+
   
 
   // Calculate total price of selected items
   const total = cart
     .filter((item) => selectedItems.includes(item.product_id))
     .reduce((total, item) => total + item.price * item.quantity, 0);
-
-  // Sync cart with localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
 
   return (
     <div>
@@ -194,11 +198,11 @@ const Cart = () => {
       <div className="total">
         <h3>Total: ₱{total.toLocaleString()}</h3>
         <button
-          onClick={handleCheckout}
+          onClick={handlePartialCheckout}
           className="checkout-btn"
           disabled={selectedItems.length === 0}
         >
-          Checkout
+          Checkout Selected Items
         </button>
       </div>
     </div>
